@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package gophkeeper;
+
+option go_package = "cmd/proto";
+
+message UserRequest {
+  string login = 1;
+  string password = 2;
+}
+
+message UserResponse {
+  string token = 1;
+}
+
+service UserService {
+  rpc Register(UserRequest) returns (UserResponse);
+  rpc Login(UserRequest) returns (UserResponse);
+}
