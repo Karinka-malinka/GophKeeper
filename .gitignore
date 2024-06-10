@@ -7,6 +7,7 @@
 *.dll
 *.so
 *.dylib
+*.wav
 
 # Test binary, built with `go test -c`
 *.test
@@ -15,7 +16,15 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
+vendor/
+testfile/
+
+# Configuration files
+cmd/config/config.toml
+
+# IDEs directories
+.idea
+.vscode
 
 # Go workspace file
 go.work
