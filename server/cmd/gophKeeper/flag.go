@@ -9,7 +9,7 @@ import (
 
 func parseFlags(cfg *config.ConfigData) {
 
-	flag.StringVar(&cfg.RunAddr, "a", "localhost:8080", "address and port to run server")
+	flag.StringVar(&cfg.RunAddr, "a", "localhost:8888", "address and port to run server")
 	flag.StringVar(&cfg.DatabaseDSN, "d", "", "adress connect database")
 
 	flag.Parse()

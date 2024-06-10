@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/signal"
 
@@ -28,7 +27,7 @@ func main() {
 
 	db, err := database.NewDB(cfg.DatabaseDSN)
 	if err != nil {
-		log.Fatalf("error in open database. error: %v", err)
+		os.Exit(1)
 	}
 	defer db.Close()
 
@@ -36,10 +35,13 @@ func main() {
 	userApp := userApp.NewUser(userStore)
 	userHandler := userHandler.NewUserHandler(userApp)
 
-	appServer := server.NewServer(cfg.RunAddr)
+	appServer, err := server.NewServer(cfg.RunAddr)
+	if err != nil {
+		os.Exit(1)
+	}
 
 	pb.RegisterUserServiceServer(appServer.Srv, userHandler)
-	go appServer.Start()
+	go appServer.Start(ctx)
 
 	<-ctx.Done()
 	appServer.Stop()

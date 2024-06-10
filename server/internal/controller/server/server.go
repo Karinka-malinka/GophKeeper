@@ -1,7 +1,8 @@
 package server
 
 import (
-	"log"
+	"context"
+	"log/slog"
 	"net"
 
 	"google.golang.org/grpc"
@@ -12,31 +13,30 @@ type Server struct {
 	listen net.Listener
 }
 
-func NewServer(addr string) *Server {
+func NewServer(addr string) (*Server, error) {
 
 	listen, err := net.Listen("tcp", addr)
 	if err != nil {
-		log.Fatalf(err.Error())
+		slog.Info(err.Error())
+		return nil, err
 	}
 
-	// создаём gRPC-сервер без зарегистрированной службы
 	srv := grpc.NewServer()
 
-	return &Server{Srv: srv, listen: listen}
+	return &Server{Srv: srv, listen: listen}, nil
 }
 
-func (s *Server) Start() {
+func (s *Server) Start(ctx context.Context) {
+
+	slog.Info("server started:" + s.listen.Addr().String())
 
 	if err := s.Srv.Serve(s.listen); err != nil {
-		log.Fatal(err)
+		slog.Info(err.Error())
+		ctx.Done()
 	}
-
-	log.Println("server started:", s.listen.Addr())
-
 }
 
 func (s *Server) Stop() {
-
 	s.Srv.GracefulStop()
-	log.Println("Server is graceful shutdown...")
+	slog.Info("Server is graceful shutdown...")
 }

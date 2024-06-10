@@ -7,7 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 
 	"github.com/google/uuid"
 )
@@ -76,7 +76,8 @@ func (ua *Users) checkHash(user User, userHash string) bool {
 	check2, err := hex.DecodeString(userHash)
 
 	if err != nil {
-		log.Printf("Error in decode user hash. error: %v\n", err)
+		slog.Error("Error in decode user hash. error: " + err.Error())
+		return false
 	}
 
 	return hmac.Equal(check2, check1)

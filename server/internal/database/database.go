@@ -3,7 +3,7 @@ package database
 import (
 	"database/sql"
 	"errors"
-	"log"
+	"log/slog"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
@@ -20,19 +20,21 @@ func NewDB(ps string) (*sql.DB, error) {
 
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
-		log.Fatal("Error when creating the driver:", err)
+		slog.Error("Error when creating the driver:" + err.Error())
+		return nil, err
 	}
 
 	m, err := migrate.NewWithDatabaseInstance("file://../migrations", "postgres", driver)
 	if err != nil {
-		log.Fatal("Error initializing migrations:", err)
+		slog.Error("Error initializing migrations:" + err.Error())
+		return nil, err
 	}
 
 	defer m.Close()
 
 	err = m.Up()
 	if errors.Is(err, migrate.ErrNoChange) {
-		log.Fatal("Error during migration:", err)
+		slog.Debug("Error during migration:" + err.Error())
 	}
 
 	return db, nil

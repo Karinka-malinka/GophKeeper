@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log/slog"
 
 	"github.com/GophKeeper/server/internal/app/user"
 	"github.com/GophKeeper/server/internal/database"
@@ -35,6 +36,7 @@ func (d *UserStore) Create(ctx context.Context, user user.User) error {
 			return database.NewErrorConflict(err)
 		}
 
+		slog.Error(err.Error())
 		return err
 	}
 
@@ -52,16 +54,19 @@ func (d *UserStore) Get(ctx context.Context, condition map[string]string) (*user
 		ToSql()
 
 	if err != nil {
+		slog.Error(err.Error())
 		return nil, err
 	}
 
 	rows, err = d.db.QueryContext(ctx, query, args...)
 
 	if err != nil {
+		slog.Error(err.Error())
 		return nil, err
 	}
 
 	if rows.Err() != nil {
+		slog.Error(rows.Err().Error())
 		return nil, rows.Err()
 	}
 
