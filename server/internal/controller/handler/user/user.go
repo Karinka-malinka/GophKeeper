@@ -2,9 +2,11 @@ package user
 
 import (
 	"context"
+	"errors"
 
 	pb "github.com/GophKeeper/server/cmd/proto"
 	"github.com/GophKeeper/server/internal/app/user"
+	"github.com/GophKeeper/server/internal/database"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -39,7 +41,11 @@ func (u *UsersServer) Register(ctx context.Context, in *pb.UserRequest) (*pb.Use
 	select {
 	case result := <-ca:
 		return &pb.UserResponse{Token: result}, nil
-	case <-errc:
+	case err := <-errc:
+		var errConflict *database.ConflictError
+		if errors.As(err, &errConflict) {
+			return nil, status.Errorf(codes.AlreadyExists, "")
+		}
 		return nil, status.Errorf(codes.Internal, "")
 	case <-ctx.Done():
 		return nil, status.Errorf(codes.Aborted, "")

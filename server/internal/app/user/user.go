@@ -3,10 +3,8 @@ package user
 import (
 	"context"
 	"crypto/hmac"
-	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -36,7 +34,6 @@ func NewUser(userStore UserStore) *Users {
 func (ua *Users) Register(ctx context.Context, user User) (string, error) {
 
 	user.UUID = uuid.New()
-	user.Password = hex.EncodeToString(ua.writeHash(user.Username, user.Password))
 
 	if err := ua.userStore.Create(ctx, user); err != nil {
 		return "", err
@@ -72,7 +69,7 @@ func (ua *Users) Login(ctx context.Context, user User) (string, error) {
 
 func (ua *Users) checkHash(user User, userHash string) bool {
 
-	check1 := ua.writeHash(user.Username, user.Password)
+	check1 := []byte(user.Password)
 	check2, err := hex.DecodeString(userHash)
 
 	if err != nil {
@@ -82,12 +79,4 @@ func (ua *Users) checkHash(user User, userHash string) bool {
 
 	return hmac.Equal(check2, check1)
 
-}
-
-func (ua *Users) writeHash(username string, password string) []byte {
-
-	hash := hmac.New(sha256.New, []byte("ua.Cfg.SecretKeyForHashingPassword"))
-	hash.Write([]byte(fmt.Sprintf("%s:%s:%s", username, password, "ua.Cfg.SecretKeyForHashingPassword")))
-
-	return hash.Sum(nil)
 }
