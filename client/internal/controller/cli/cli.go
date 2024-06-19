@@ -1,21 +1,30 @@
-package main
+package cli
 
 import (
 	"bufio"
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/GophKeeper/client/cmd/mycripto"
 	pb "github.com/GophKeeper/server/cmd/proto"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-func help() {
-	fmt.Println("Возможные команды:")
+type CLI struct {
+	Token string
+}
+
+func NewCLI() *CLI {
+	return &CLI{}
+}
+
+func (cli *CLI) Help() {
+	fmt.Println("\nВозможные команды:")
 	fmt.Println("__Доступ__")
 	fmt.Println("REGISTER username password - регистрация нового пользователя") //+
 	fmt.Println("LOGIN username password - вход существующего пользователя")    //+
@@ -44,39 +53,41 @@ func help() {
 	fmt.Println("DELETEBANKCARD number - удалить данные о банковской карте")
 }
 
-func register(ctx context.Context, c pb.UserServiceClient, words []string) {
+func (cli *CLI) Register(ctx context.Context, c pb.UserServiceClient, words []string) {
 
 	reader := bufio.NewReader(os.Stdin)
 
 	if len(words) < 3 {
 
-		if len(words) < 1 {
+		if len(words) < 2 {
 			fmt.Print("Введите имя пользователя: ")
 			username, _ := reader.ReadString('\n')
 			username = strings.TrimSpace(username)
 			words = append(words, username)
 		}
 
-		if len(words) < 2 {
-			fmt.Print("Придумайте пароль: ")
-			password, _ := reader.ReadString('\n')
-			password = strings.TrimSpace(password)
+		fmt.Print("Придумайте пароль: ")
+		password, _ := reader.ReadString('\n')
+		password = strings.TrimSpace(password)
 
-			fmt.Print("Повторите пароль: ")
-			password2, _ := reader.ReadString('\n')
-			password2 = strings.TrimSpace(password2)
+		fmt.Print("Повторите пароль: ")
+		password2, _ := reader.ReadString('\n')
+		password2 = strings.TrimSpace(password2)
 
-			if password != password2 {
-				fmt.Println("Введенные пароли не совпадают. Повторите процесс регистрации еще раз")
-				return
-			}
-			words = append(words, password)
+		if password != password2 {
+			fmt.Println("Введенные пароли не совпадают. Повторите процесс регистрации еще раз")
+			return
 		}
+		words = append(words, password)
 	}
 
-	userReq := pb.UserRequest{Login: words[1], Password: writeHash(words[2])}
+	userReq := pb.UserRequest{Login: words[1], Password: mycripto.WriteHash(words[2])}
 
-	resp, err := c.Register(ctx, &userReq)
+	// Добавление таймаута в 200 миллисекунд к контексту
+	ctxWithTimeout, cancelTimeout := context.WithTimeout(ctx, 200*time.Millisecond)
+	defer cancelTimeout()
+
+	resp, err := c.Register(ctxWithTimeout, &userReq)
 	if err != nil {
 		if e, ok := status.FromError(err); ok {
 			switch e.Code() {
@@ -85,7 +96,7 @@ func register(ctx context.Context, c pb.UserServiceClient, words []string) {
 			case codes.DeadlineExceeded:
 				fmt.Println("Сервер не отвечает. Попробуйте позже")
 			default:
-				fmt.Println(e.Code(), e.Message())
+				fmt.Println(e.Code(), "Ошибка на сервере. Обратитесь в техническую поддержку")
 			}
 		} else {
 			fmt.Printf("Не получилось распарсить ошибку %v", err)
@@ -93,16 +104,16 @@ func register(ctx context.Context, c pb.UserServiceClient, words []string) {
 		return
 	}
 
-	Token = resp.Token
+	cli.Token = resp.Token
 	fmt.Println("Вы успешно зарегистрированы!")
 }
 
-func login(ctx context.Context, c pb.UserServiceClient, words []string) {
+func (cli *CLI) Login(ctx context.Context, c pb.UserServiceClient, words []string) {
 
 	reader := bufio.NewReader(os.Stdin)
 
 	if len(words) < 3 {
-		if len(words) < 1 {
+		if len(words) < 2 {
 			fmt.Print("Введите имя пользователя: ")
 
 			username, _ := reader.ReadString('\n')
@@ -110,16 +121,14 @@ func login(ctx context.Context, c pb.UserServiceClient, words []string) {
 			words = append(words, username)
 		}
 
-		if len(words) < 2 {
-			fmt.Print("Введите пароль: ")
-			password, _ := reader.ReadString('\n')
-			password = strings.TrimSpace(password)
+		fmt.Print("Введите пароль: ")
+		password, _ := reader.ReadString('\n')
+		password = strings.TrimSpace(password)
 
-			words = append(words, password)
-		}
+		words = append(words, password)
 	}
 
-	userReq := pb.UserRequest{Login: words[1], Password: writeHash(words[2])}
+	userReq := pb.UserRequest{Login: words[1], Password: mycripto.WriteHash(words[2])}
 
 	resp, err := c.Login(ctx, &userReq)
 	if err != nil {
@@ -138,16 +147,63 @@ func login(ctx context.Context, c pb.UserServiceClient, words []string) {
 		return
 	}
 
-	Token = resp.Token
+	cli.Token = resp.Token
 	fmt.Println("Добро пожаловать в GophKeeper!")
 
 	//sync
-
+	//resp, err := c.(ctx, &userReq)
 }
 
-func writeHash(password string) string {
-	hasher := sha256.New()
-	hasher.Write([]byte(password))
-	hash := hasher.Sum(nil)
-	return hex.EncodeToString(hash)
+func (cli *CLI) AddLoginData(ctx context.Context, c pb.ManagementServiceClient, words []string) {
+
+	var meta string
+
+	reader := bufio.NewReader(os.Stdin)
+
+	if len(words) < 3 {
+		if len(words) < 2 {
+			fmt.Print("Введите значение login: ")
+
+			login, _ := reader.ReadString('\n')
+			login = strings.TrimSpace(login)
+			words = append(words, login)
+		}
+
+		fmt.Print("Введите значение password: ")
+		password, _ := reader.ReadString('\n')
+		password = strings.TrimSpace(password)
+
+		words = append(words, password)
+	}
+
+	if len(words) > 3 {
+		meta = strings.Join(words[3:], " ")
+	}
+
+	loginData := pb.LoginData{
+		Login:    mycripto.Encrypt([]byte(words[1]), []byte("keykeykeykeykey1")),
+		Password: mycripto.Encrypt([]byte(words[2]), []byte("keykeykeykeykey1")),
+		Meta:     mycripto.Encrypt([]byte(meta), []byte("keykeykeykeykey1")),
+	}
+
+	_, err := c.AddLoginData(ctx, &loginData)
+	if err != nil {
+		if e, ok := status.FromError(err); ok {
+			switch e.Code() {
+			case codes.Unauthenticated:
+				fmt.Println("Неверное имя пользователя или пароль.")
+			case codes.DeadlineExceeded:
+				fmt.Println("Сервер не отвечает. Попробуйте позже")
+			default:
+				fmt.Println(e.Code(), e.Message())
+			}
+		} else {
+			fmt.Printf("Не получилось распарсить ошибку %v", err)
+		}
+		return
+	}
+
+	fmt.Println("Данные успешно добавлены")
+	//sync
+
 }

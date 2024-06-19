@@ -2,11 +2,9 @@ package user
 
 import (
 	"context"
-	"crypto/hmac"
-	"encoding/hex"
 	"errors"
-	"log/slog"
 
+	"github.com/GophKeeper/server/cmd/config"
 	"github.com/google/uuid"
 )
 
@@ -16,18 +14,20 @@ type User struct {
 	Password string
 }
 
-type UserStore interface {
+type IUserStore interface {
 	Create(ctx context.Context, user User) error
-	Get(ctx context.Context, condition map[string]string) (*User, error)
+	Get(ctx context.Context, login string) (*User, error)
 }
 
 type Users struct {
-	userStore UserStore
+	userStore IUserStore
+	cfg       *config.ConfigToken
 }
 
-func NewUser(userStore UserStore) *Users {
+func NewUser(userStore IUserStore, cfg *config.ConfigToken) *Users {
 	return &Users{
 		userStore: userStore,
+		cfg:       cfg,
 	}
 }
 
@@ -39,7 +39,7 @@ func (ua *Users) Register(ctx context.Context, user User) (string, error) {
 		return "", err
 	}
 
-	accessToken, err := ua.newToken(user, 60, user.Username)
+	accessToken, err := ua.newToken(user, ua.cfg.TokenExpiresAt, ua.cfg.SecretKeyForToken)
 	if err != nil {
 		return "", err
 	}
@@ -49,13 +49,13 @@ func (ua *Users) Register(ctx context.Context, user User) (string, error) {
 
 func (ua *Users) Login(ctx context.Context, user User) (string, error) {
 
-	userInDB, err := ua.userStore.Get(ctx, map[string]string{"login": user.Username})
+	userInDB, err := ua.userStore.Get(ctx, user.Username)
 
 	if err != nil {
 		return "", err
 	}
 
-	if !ua.checkHash(user, userInDB.Password) {
+	if user.Password != userInDB.Password {
 		return "", errors.New("401")
 	}
 
@@ -65,18 +65,4 @@ func (ua *Users) Login(ctx context.Context, user User) (string, error) {
 	}
 
 	return accessToken, nil
-}
-
-func (ua *Users) checkHash(user User, userHash string) bool {
-
-	check1 := []byte(user.Password)
-	check2, err := hex.DecodeString(userHash)
-
-	if err != nil {
-		slog.Error("Error in decode user hash. error: " + err.Error())
-		return false
-	}
-
-	return hmac.Equal(check2, check1)
-
 }

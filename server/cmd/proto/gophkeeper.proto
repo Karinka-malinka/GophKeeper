@@ -2,6 +2,9 @@ syntax = "proto3";
 
 package gophkeeper;
 
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
 option go_package = "cmd/proto";
 
 message UserRequest {
@@ -13,7 +16,74 @@ message UserResponse {
   string token = 1;
 }
 
+message LoginData {
+  string uid = 1; //обязательное для Edit и Delete
+  bytes login = 2;
+  bytes password = 3;
+  bytes meta = 4;
+  google.protobuf.Timestamp created = 5;
+}
+
+message Text {
+  string uid = 1; //обязательное для Delete
+  bytes text = 2;
+  bytes meta = 3;
+  google.protobuf.Timestamp created = 4;
+}
+
+message File {
+  string uid = 1; //обязательное для Delete
+  bytes file = 2;
+  bytes meta = 3;
+  google.protobuf.Timestamp created = 4;
+}
+
+message BankCard {
+  bytes number = 1; //обязательное для Delete
+  bytes term = 2;
+  bytes ccv = 3;
+  bytes meta = 4;
+  google.protobuf.Timestamp created = 5;
+}
+
+message LoginDataResponse {
+  repeated LoginData login_data = 1;
+}
+
+message TextResponse {
+  repeated Text text = 1;
+}
+
+message FileResponse {
+  repeated File file = 1;
+}
+
+message BankCardResponse {
+  repeated BankCard bank_card = 1;
+}
+
 service UserService {
   rpc Register(UserRequest) returns (UserResponse);
   rpc Login(UserRequest) returns (UserResponse);
+}
+
+service SyncService{
+  rpc ListLoginData(google.protobuf.Empty) returns (LoginDataResponse);
+  rpc ListText(google.protobuf.Empty) returns (TextResponse);
+  rpc ListFile(google.protobuf.Empty) returns (FileResponse);
+  rpc ListBankCard(google.protobuf.Empty) returns (BankCardResponse);
+}
+
+service ManagementService{
+  rpc AddLoginData(LoginData) returns (google.protobuf.Empty);
+  rpc AddText(Text) returns (google.protobuf.Empty);
+  rpc AddFile(File) returns (google.protobuf.Empty);
+  rpc AddBankCard(BankCard) returns (google.protobuf.Empty);
+  
+  rpc EditLoginData(LoginData) returns (google.protobuf.Empty);
+  
+  rpc DeleteLoginData(LoginData) returns (google.protobuf.Empty);
+  rpc DeleteText(Text) returns (google.protobuf.Empty);
+  rpc DeleteFile(File) returns (google.protobuf.Empty);
+  rpc DeleteBankCard(BankCard) returns (google.protobuf.Empty);
 }

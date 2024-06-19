@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log/slog"
 	"os"
 	"os/signal"
 
@@ -22,27 +23,39 @@ func main() {
 	cfg := config.NewConfig()
 	parseFlags(cfg)
 
+	cfgToken, err := cfg.GetConfig(cfg.PathKeys)
+	if err != nil {
+		slog.Error(err.Error())
+		os.Exit(1)
+	}
+
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	db, err := database.NewDB(cfg.DatabaseDSN)
+	db, m, err := database.NewDB(cfg.DatabaseDSN)
 	if err != nil {
 		os.Exit(1)
 	}
-	defer db.Close()
 
 	userStore := userStore.NewUserStore(db)
-	userApp := userApp.NewUser(userStore)
+	userApp := userApp.NewUser(userStore, cfgToken)
 	userHandler := userHandler.NewUserHandler(userApp)
 
-	appServer, err := server.NewServer(cfg.RunAddr)
+	appServer, err := server.NewServer(cfg.RunAddr, userApp)
 	if err != nil {
 		os.Exit(1)
 	}
 
 	pb.RegisterUserServiceServer(appServer.Srv, userHandler)
+
+	//pb.RegisterSyncServiceServer(appServer.Srv, syncHandler)
+
+	//pb.RegisterManagementServiceServer(appServer.Srv, managementHandler)
+
 	go appServer.Start(ctx)
 
 	<-ctx.Done()
 	appServer.Stop()
+	m.Close()
+	db.Close()
 }

@@ -16,7 +16,7 @@ type UsersServer struct {
 	UserApp *user.Users
 }
 
-// NewURLHandler создает новый экземпляр URLHandler.
+// NewUserHandler создает новый экземпляр UsersServer.
 func NewUserHandler(userapp *user.Users) *UsersServer {
 	return &UsersServer{UserApp: userapp}
 }

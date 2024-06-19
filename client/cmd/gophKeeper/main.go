@@ -8,16 +8,14 @@ import (
 	"os"
 	"os/signal"
 	"strings"
-	"time"
 
 	pb "github.com/GophKeeper/server/cmd/proto"
 
 	"github.com/GophKeeper/client/cmd/config"
+	"github.com/GophKeeper/client/internal/controller/cli"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
-
-var Token string
 
 func main() {
 
@@ -27,10 +25,6 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	// Добавление таймаута в 200 миллисекунд к контексту
-	ctxWithTimeout, cancelTimeout := context.WithTimeout(ctx, 200*time.Millisecond)
-	defer cancelTimeout()
-
 	// устанавливаем соединение с сервером
 	conn, err := grpc.NewClient(cfg.ServerAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -38,12 +32,16 @@ func main() {
 	}
 	defer conn.Close()
 
-	c := pb.NewUserServiceClient(conn)
+	cService := pb.NewUserServiceClient(conn)
+	//cSync := pb.NewSyncServiceClient(conn)
+	cManegment := pb.NewManagementServiceClient(conn)
 
 	fmt.Println("Соединение с сервером установлено")
 
+	cli := cli.NewCLI()
+
 	for {
-		fmt.Print("Введите команду: ")
+		fmt.Print("\nВведите команду: ")
 		reader := bufio.NewReader(os.Stdin)
 		commandstr, _ := reader.ReadString('\n')
 		commandstr = strings.TrimSpace(commandstr)
@@ -53,14 +51,16 @@ func main() {
 
 		switch words[0] {
 		case "register":
-			register(ctxWithTimeout, c, words)
+			cli.Register(ctx, cService, words)
 		case "login":
-			login(ctxWithTimeout, c, words)
+			cli.Login(ctx, cService, words)
+		case "addlogindata":
+			cli.AddLoginData(ctx, cManegment, words)
 		case "exit":
 			fmt.Println("Программа завершена.")
 			os.Exit(0)
 		case "help":
-			help()
+			cli.Help()
 		default:
 			fmt.Println("Неверная команда. Попробуйте снова.")
 		}

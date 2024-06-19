@@ -1,0 +1,4 @@
+{
+    "secret_key_for_token": "localhost:8080",
+    "token_expires_at": 60
+} 

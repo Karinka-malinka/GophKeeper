@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net"
 
+	"github.com/GophKeeper/server/internal/app/user"
 	"google.golang.org/grpc"
 )
 
@@ -13,7 +14,7 @@ type Server struct {
 	listen net.Listener
 }
 
-func NewServer(addr string) (*Server, error) {
+func NewServer(addr string, userApp *user.Users) (*Server, error) {
 
 	listen, err := net.Listen("tcp", addr)
 	if err != nil {
@@ -21,7 +22,7 @@ func NewServer(addr string) (*Server, error) {
 		return nil, err
 	}
 
-	srv := grpc.NewServer()
+	srv := grpc.NewServer(grpc.UnaryInterceptor(userApp.GetToken))
 
 	return &Server{Srv: srv, listen: listen}, nil
 }

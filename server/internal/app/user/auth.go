@@ -1,12 +1,17 @@
 package user
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/gommon/log"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 type JWTCustomClaims struct {
@@ -46,33 +51,54 @@ func (ua *Users) getTokensWithClaims(user User, tokenExpiresAt uint) (token *jwt
 	return token
 }
 
-/*
-func (ua *Users) Token(ctx context.Context, refreshToken string, cfg config.ApiServer) (*LoginResponse, error) {
+func (ua *Users) GetToken(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 
-	valid, userClaims, err := ParseToken(refreshToken, cfg.SecretKeyForRefreshToken)
-	if err != nil {
-		return nil, err
-	}
+	if info.FullMethod != "/gophkeeper.UserService/Login" && info.FullMethod != "/gophkeeper.UserService/Register" {
 
-	if valid {
-		user, err := ua.userStore.Get(ctx, map[string]string{"uuid": userClaims.UserID})
-		if err != nil {
-			return nil, err
+		var token string
+
+		md, ok := metadata.FromIncomingContext(ctx)
+
+		if ok {
+			values := md.Get("access_token")
+			if len(values) > 0 {
+				token = values[0]
+			}
 		}
 
-		accessToken, err := ua.newToken(*user, cfg.AccessTokenExpiresAt, cfg.SecretKeyForAccessToken)
-		if err != nil {
-			return nil, err
+		if len(token) == 0 {
+			return nil, status.Error(codes.Unauthenticated, "missing token")
 		}
 
-		return &LoginResponse{AccessToken: accessToken, RefreshToken: refreshToken}, nil
+		if ua.cfg.SecretKeyForToken != "" {
+
+			valid, userClaims, err := parseToken(token, ua.cfg.SecretKeyForToken)
+
+			if err != nil {
+				return nil, err
+			}
+
+			if !valid {
+				return nil, status.Errorf(codes.Unauthenticated, "Действие токена доступа истекло. Выполните команду LOGIN")
+			}
+
+			if userClaims.UserID == "" {
+				return nil, status.Errorf(codes.Unauthenticated, "no userID")
+			}
+
+			md.Append("userID", userClaims.UserID)
+
+			return handler(ctx, req)
+		}
+
+		return nil, status.Error(codes.Unauthenticated, "")
 	}
 
-	return nil, errors.New("401")
+	return handler(ctx, req)
+
 }
-*/
 
-func ParseToken(tokenstr, secretKey string) (bool, *JWTCustomClaims, error) {
+func parseToken(tokenstr, secretKey string) (bool, *JWTCustomClaims, error) {
 
 	token, err := jwt.ParseWithClaims(tokenstr, &JWTCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		_, ok := token.Method.(*jwt.SigningMethodHMAC)
@@ -94,4 +120,20 @@ func ParseToken(tokenstr, secretKey string) (bool, *JWTCustomClaims, error) {
 	userClaims := token.Claims.(*JWTCustomClaims)
 
 	return token.Valid, userClaims, nil
+}
+
+func GetUserID(ctx context.Context) string {
+
+	var userID string
+
+	md, ok := metadata.FromIncomingContext(ctx)
+
+	if ok {
+		values := md.Get("userID")
+		if len(values) > 0 {
+			userID = values[0]
+		}
+	}
+
+	return userID
 }
