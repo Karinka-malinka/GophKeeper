@@ -12,8 +12,9 @@ type ConfigData struct {
 }
 
 type ConfigToken struct {
-	SecretKeyForToken string
-	TokenExpiresAt    uint
+	SecretKeyForToken string `json:"secret_key_for_token"`
+	TokenExpiresAt    uint   `json:"token_expires_at"`
+	Key               string `json:"key_cripto"`
 }
 
 func NewConfig() *ConfigData {

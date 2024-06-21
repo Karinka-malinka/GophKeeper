@@ -369,7 +369,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ManagementServiceClient interface {
-	AddLoginData(ctx context.Context, in *LoginData, opts ...grpc.CallOption) (*empty.Empty, error)
+	AddLoginData(ctx context.Context, in *LoginData, opts ...grpc.CallOption) (*LoginData, error)
 	AddText(ctx context.Context, in *Text, opts ...grpc.CallOption) (*empty.Empty, error)
 	AddFile(ctx context.Context, in *File, opts ...grpc.CallOption) (*empty.Empty, error)
 	AddBankCard(ctx context.Context, in *BankCard, opts ...grpc.CallOption) (*empty.Empty, error)
@@ -388,9 +388,9 @@ func NewManagementServiceClient(cc grpc.ClientConnInterface) ManagementServiceCl
 	return &managementServiceClient{cc}
 }
 
-func (c *managementServiceClient) AddLoginData(ctx context.Context, in *LoginData, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *managementServiceClient) AddLoginData(ctx context.Context, in *LoginData, opts ...grpc.CallOption) (*LoginData, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(empty.Empty)
+	out := new(LoginData)
 	err := c.cc.Invoke(ctx, ManagementService_AddLoginData_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -482,7 +482,7 @@ func (c *managementServiceClient) DeleteBankCard(ctx context.Context, in *BankCa
 // All implementations must embed UnimplementedManagementServiceServer
 // for forward compatibility
 type ManagementServiceServer interface {
-	AddLoginData(context.Context, *LoginData) (*empty.Empty, error)
+	AddLoginData(context.Context, *LoginData) (*LoginData, error)
 	AddText(context.Context, *Text) (*empty.Empty, error)
 	AddFile(context.Context, *File) (*empty.Empty, error)
 	AddBankCard(context.Context, *BankCard) (*empty.Empty, error)
@@ -498,7 +498,7 @@ type ManagementServiceServer interface {
 type UnimplementedManagementServiceServer struct {
 }
 
-func (UnimplementedManagementServiceServer) AddLoginData(context.Context, *LoginData) (*empty.Empty, error) {
+func (UnimplementedManagementServiceServer) AddLoginData(context.Context, *LoginData) (*LoginData, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddLoginData not implemented")
 }
 func (UnimplementedManagementServiceServer) AddText(context.Context, *Text) (*empty.Empty, error) {

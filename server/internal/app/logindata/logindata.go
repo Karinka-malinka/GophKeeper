@@ -18,7 +18,7 @@ type LoginData struct {
 
 type ILoginDataStore interface {
 	Create(ctx context.Context, loginData LoginData) error
-	Update(ctx context.Context, loginDataUID, newpassword string) error
+	Update(ctx context.Context, loginDataUID string, newpassword []byte) error
 	Delete(ctx context.Context, loginDataUID string) error
 	GetList(ctx context.Context, userID string) ([]LoginData, error)
 }
@@ -27,25 +27,25 @@ type LoginDatas struct {
 	loginDataStore ILoginDataStore
 }
 
-func NewUser(loginDataStore ILoginDataStore) *LoginDatas {
+func NewLoginData(loginDataStore ILoginDataStore) *LoginDatas {
 	return &LoginDatas{
 		loginDataStore: loginDataStore,
 	}
 }
 
-func (l *LoginDatas) Add(ctx context.Context, loginData LoginData) error {
+func (l *LoginDatas) Add(ctx context.Context, loginData LoginData) (*LoginData, error) {
 
 	loginData.UUID = uuid.New()
 	loginData.Created = time.Now().UTC()
 
 	if err := l.loginDataStore.Create(ctx, loginData); err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &loginData, nil
 }
 
-func (l *LoginDatas) Edit(ctx context.Context, loginDataUID, newpassword string) error {
+func (l *LoginDatas) Edit(ctx context.Context, loginDataUID string, newpassword []byte) error {
 
 	if err := l.loginDataStore.Update(ctx, loginDataUID, newpassword); err != nil {
 		return err

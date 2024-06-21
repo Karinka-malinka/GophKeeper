@@ -13,11 +13,14 @@ import (
 )
 
 type SyncServer struct {
-	pb.UnimplementedUserServiceServer
+	pb.UnimplementedSyncServiceServer
 	LoginDataApp *logindata.LoginDatas
+	//TODO: добавить app на все типы хранимых данных
+	//TextDataApp *textdata.TextDatas
 }
 
 // NewSyncHandler создает новый экземпляр SyncServer.
+// TODO: добавить app на все типы хранимых данных
 func NewSyncHandler(loginData *logindata.LoginDatas) *SyncServer {
 	return &SyncServer{
 		LoginDataApp: loginData,
@@ -31,7 +34,11 @@ func (s *SyncServer) ListLoginData(ctx context.Context, _ *emptypb.Empty) (*pb.L
 
 	go func() {
 
-		userID := user.GetUserID(ctx)
+		userID, err := user.GetUserID(ctx)
+		if err != nil {
+			errc <- err
+			return
+		}
 
 		var response pb.LoginDataResponse
 

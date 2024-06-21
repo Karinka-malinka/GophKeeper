@@ -12,6 +12,7 @@ type User struct {
 	UUID     uuid.UUID
 	Username string
 	Password string
+	Token    string
 }
 
 type IUserStore interface {
@@ -21,48 +22,52 @@ type IUserStore interface {
 
 type Users struct {
 	userStore IUserStore
-	cfg       *config.ConfigToken
+	Cfg       *config.ConfigToken
 }
 
 func NewUser(userStore IUserStore, cfg *config.ConfigToken) *Users {
 	return &Users{
 		userStore: userStore,
-		cfg:       cfg,
+		Cfg:       cfg,
 	}
 }
 
-func (ua *Users) Register(ctx context.Context, user User) (string, error) {
+func (ua *Users) Register(ctx context.Context, user User) (*User, error) {
 
 	user.UUID = uuid.New()
 
 	if err := ua.userStore.Create(ctx, user); err != nil {
-		return "", err
+		return nil, err
 	}
 
-	accessToken, err := ua.newToken(user, ua.cfg.TokenExpiresAt, ua.cfg.SecretKeyForToken)
+	accessToken, err := ua.newToken(user, ua.Cfg.TokenExpiresAt, ua.Cfg.SecretKeyForToken)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return accessToken, nil
+	user.Token = accessToken
+
+	return &user, nil
 }
 
-func (ua *Users) Login(ctx context.Context, user User) (string, error) {
+func (ua *Users) Login(ctx context.Context, user User) (*User, error) {
 
 	userInDB, err := ua.userStore.Get(ctx, user.Username)
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if user.Password != userInDB.Password {
-		return "", errors.New("401")
+		return nil, errors.New("401")
 	}
 
-	accessToken, err := ua.newToken(*userInDB, 60, user.Username)
+	accessToken, err := ua.newToken(*userInDB, ua.Cfg.TokenExpiresAt, ua.Cfg.SecretKeyForToken)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return accessToken, nil
+	userInDB.Token = accessToken
+
+	return userInDB, nil
 }

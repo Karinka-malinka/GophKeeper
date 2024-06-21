@@ -23,24 +23,24 @@ func NewUserHandler(userapp *user.Users) *UsersServer {
 
 func (u *UsersServer) Register(ctx context.Context, in *pb.UserRequest) (*pb.UserResponse, error) {
 
-	ca := make(chan string)
+	ca := make(chan *user.User)
 	errc := make(chan error)
 
 	go func() {
 
-		token, err := u.UserApp.Register(ctx, user.User{Username: in.Login, Password: in.Password})
+		user, err := u.UserApp.Register(ctx, user.User{Username: in.Login, Password: in.Password})
 
 		if err != nil {
 			errc <- err
 			return
 		}
 
-		ca <- token
+		ca <- user
 	}()
 
 	select {
 	case result := <-ca:
-		return &pb.UserResponse{Token: result}, nil
+		return &pb.UserResponse{Token: result.Token, Uid: result.UUID.String(), Key: u.UserApp.Cfg.Key}, nil
 	case err := <-errc:
 		var errConflict *database.ConflictError
 		if errors.As(err, &errConflict) {
@@ -54,24 +54,24 @@ func (u *UsersServer) Register(ctx context.Context, in *pb.UserRequest) (*pb.Use
 
 func (u *UsersServer) Login(ctx context.Context, in *pb.UserRequest) (*pb.UserResponse, error) {
 
-	ca := make(chan string)
+	ca := make(chan *user.User)
 	errc := make(chan error)
 
 	go func() {
 
-		token, err := u.UserApp.Login(ctx, user.User{Username: in.Login, Password: in.Password})
+		user, err := u.UserApp.Login(ctx, user.User{Username: in.Login, Password: in.Password})
 
 		if err != nil {
 			errc <- err
 			return
 		}
 
-		ca <- token
+		ca <- user
 	}()
 
 	select {
 	case result := <-ca:
-		return &pb.UserResponse{Token: result}, nil
+		return &pb.UserResponse{Token: result.Token, Uid: result.UUID.String(), Key: u.UserApp.Cfg.Key}, nil
 	case err := <-errc:
 		if err.Error() == "401" {
 			return nil, status.Errorf(codes.Unauthenticated, "Invalid username or password")

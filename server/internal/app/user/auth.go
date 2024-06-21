@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -70,9 +71,9 @@ func (ua *Users) GetToken(ctx context.Context, req interface{}, info *grpc.Unary
 			return nil, status.Error(codes.Unauthenticated, "missing token")
 		}
 
-		if ua.cfg.SecretKeyForToken != "" {
+		if ua.Cfg.SecretKeyForToken != "" {
 
-			valid, userClaims, err := parseToken(token, ua.cfg.SecretKeyForToken)
+			valid, userClaims, err := parseToken(token, ua.Cfg.SecretKeyForToken)
 
 			if err != nil {
 				return nil, err
@@ -86,7 +87,7 @@ func (ua *Users) GetToken(ctx context.Context, req interface{}, info *grpc.Unary
 				return nil, status.Errorf(codes.Unauthenticated, "no userID")
 			}
 
-			md.Append("userID", userClaims.UserID)
+			ctx = context.WithValue(ctx, "userID", userClaims.UserID)
 
 			return handler(ctx, req)
 		}
@@ -122,18 +123,18 @@ func parseToken(tokenstr, secretKey string) (bool, *JWTCustomClaims, error) {
 	return token.Valid, userClaims, nil
 }
 
-func GetUserID(ctx context.Context) string {
+func GetUserID(ctx context.Context) (string, error) {
 
 	var userID string
 
-	md, ok := metadata.FromIncomingContext(ctx)
+	userID, ok := ctx.Value("userID").(string)
 
-	if ok {
-		values := md.Get("userID")
-		if len(values) > 0 {
-			userID = values[0]
-		}
+	//md, ok := metadata.FromIncomingContext(ctx)
+
+	if !ok {
+		slog.Error("userID not found in context")
+		return "", fmt.Errorf("userID not found in context")
 	}
 
-	return userID
+	return userID, nil
 }
