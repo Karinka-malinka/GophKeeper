@@ -1,3 +1,4 @@
+// Package mysync предоставляет реализацию методов для синхронизации данных
 package mysync
 
 import (
@@ -14,6 +15,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// UsersServer представляет обработчик для синхронизации данных
 type SyncServer struct {
 	pb.UnimplementedSyncServiceServer
 	LoginDataApp *logindata.LoginDatas
@@ -29,6 +31,11 @@ func NewSyncHandler(loginData *logindata.LoginDatas) *SyncServer {
 	}
 }
 
+// ListLoginData возвращает список данных для синхронизации в ответе типа pb.LoginDataResponse.
+// Возможные коды ошибок:
+//   - codes.Unauthenticated: Если запрос не авторизован из-за отсутствия прав доступа.
+//   - codes.Internal: В случае внутренней ошибки сервера.
+//   - codes.Aborted: Если операция была прервана контекстом.
 func (s *SyncServer) ListLoginData(ctx context.Context, _ *emptypb.Empty) (*pb.LoginDataResponse, error) {
 
 	ca := make(chan *pb.LoginDataResponse)

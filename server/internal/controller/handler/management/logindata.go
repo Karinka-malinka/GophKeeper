@@ -14,6 +14,11 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+// AddLoginData добавляет новую пару логин/пароль и возвращает ответ с добавленными данными типа pb.LoginData.
+// Возможные коды ошибок:
+//   - codes.Unauthenticated: Если предоставлены неверные учетные данные.
+//   - codes.Internal: В случае внутренней ошибки сервера.
+//   - codes.Aborted: Если операция была прервана контекстом.
 func (m *ManagementServer) AddLoginData(ctx context.Context, in *pb.LoginData) (*pb.LoginData, error) {
 
 	ca := make(chan *pb.LoginData)
@@ -59,6 +64,11 @@ func (m *ManagementServer) AddLoginData(ctx context.Context, in *pb.LoginData) (
 	}
 }
 
+// EditLoginData изменяет пару логин/пароль и возвращает пустой ответ типа emptypb.Empty.
+// Возможные коды ошибок:
+//   - codes.Unauthenticated: Если предоставлены неверные учетные данные.
+//   - codes.Internal: В случае внутренней ошибки сервера.
+//   - codes.Aborted: Если операция была прервана контекстом.
 func (m *ManagementServer) EditLoginData(ctx context.Context, in *pb.LoginData) (*emptypb.Empty, error) {
 
 	ca := make(chan bool)
@@ -93,6 +103,11 @@ func (m *ManagementServer) EditLoginData(ctx context.Context, in *pb.LoginData) 
 	}
 }
 
+// DeleteLoginData удаляет пару логин/пароль и возвращает пустой ответ типа emptypb.Empty.
+// Возможные коды ошибок:
+//   - codes.Unauthenticated: Если предоставлены неверные учетные данные.
+//   - codes.Internal: В случае внутренней ошибки сервера.
+//   - codes.Aborted: Если операция была прервана контекстом.
 func (m *ManagementServer) DeleteLoginData(ctx context.Context, in *pb.LoginData) (*emptypb.Empty, error) {
 
 	ca := make(chan bool)

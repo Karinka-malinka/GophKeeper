@@ -16,16 +16,13 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// JWTCustomClaims представляет пользовательские утверждения для JWT токена.
 type JWTCustomClaims struct {
 	UserID string `json:"user_id"`
 	jwt.RegisteredClaims
 }
 
-type LoginResponse struct {
-	AccessToken  string
-	RefreshToken string
-}
-
+// newToken создает новый JWT токен для пользователя.
 func (ua *Users) newToken(user User, tokenExpiresAt uint, SecretKeyForToken string) (string, error) {
 
 	token := ua.getTokensWithClaims(user, tokenExpiresAt)
@@ -39,6 +36,7 @@ func (ua *Users) newToken(user User, tokenExpiresAt uint, SecretKeyForToken stri
 	return tokenString, nil
 }
 
+// getTokensWithClaims создает токен с пользовательскими утверждениями.
 func (ua *Users) getTokensWithClaims(user User, tokenExpiresAt uint) (token *jwt.Token) {
 
 	tokenClaims := &JWTCustomClaims{
@@ -53,6 +51,7 @@ func (ua *Users) getTokensWithClaims(user User, tokenExpiresAt uint) (token *jwt
 	return token
 }
 
+// TokenAuthMiddlewareGRPS является промежуточным слоем аутентификации для gRPC.
 func (ua *Users) TokenAuthMiddlewareGRPS(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 
 	if info.FullMethod != "/gophkeeper.UserService/Login" && info.FullMethod != "/gophkeeper.UserService/Register" {
@@ -90,6 +89,7 @@ func (ua *Users) TokenAuthMiddlewareGRPS(ctx context.Context, req interface{}, i
 	return handler(ctx, req)
 }
 
+// TokenAuthMiddlewareREST является промежуточным слоем аутентификации для REST API.
 func (ua *Users) TokenAuthMiddlewareREST(ctx context.Context, req *http.Request) metadata.MD {
 
 	md := metadata.Pairs()
@@ -119,6 +119,7 @@ func (ua *Users) TokenAuthMiddlewareREST(ctx context.Context, req *http.Request)
 	return md
 }
 
+// extractUserIDFromToken извлекает идентификатор пользователя из JWT токена.
 func extractUserIDFromToken(token, secretKeyForToken string) (string, error) {
 
 	if len(token) == 0 {
@@ -142,6 +143,7 @@ func extractUserIDFromToken(token, secretKeyForToken string) (string, error) {
 	return userClaims.UserID, nil
 }
 
+// parseToken разбирает JWT токен и возвращает его утверждения.
 func parseToken(tokenstr, secretKey string) (bool, *JWTCustomClaims, error) {
 
 	token, err := jwt.ParseWithClaims(tokenstr, &JWTCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
@@ -166,6 +168,7 @@ func parseToken(tokenstr, secretKey string) (bool, *JWTCustomClaims, error) {
 	return token.Valid, userClaims, nil
 }
 
+// GetUserID извлекает идентификатор пользователя из контекста.
 func GetUserID(ctx context.Context) (string, error) {
 
 	md, _ := metadata.FromIncomingContext(ctx)

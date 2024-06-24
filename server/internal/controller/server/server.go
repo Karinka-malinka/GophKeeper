@@ -1,3 +1,4 @@
+// Package server предоставляет реализацию сервера gRPC и REST API.
 package server
 
 import (
@@ -14,6 +15,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+// Server представляет сервер с gRPC и REST API.
 type Server struct {
 	pb.UnimplementedUserServiceServer
 	pb.UnimplementedManagementServiceServer
@@ -23,8 +25,10 @@ type Server struct {
 	SrvREST *http.Server
 }
 
+// NewServer создает новый сервер с gRPC и REST API.
 func NewServer(ctx context.Context, addrgRPS, addrRESR string, userApp *user.Users) (*Server, error) {
 
+	//gRPC
 	listen, err := net.Listen("tcp", addrgRPS)
 	if err != nil {
 		slog.Info(err.Error())
@@ -56,8 +60,6 @@ func NewServer(ctx context.Context, addrgRPS, addrRESR string, userApp *user.Use
 		return nil, err
 	}
 
-	//mux.Use(userApp.TokenAuthMiddlewareREST)
-
 	srvREST := http.Server{
 		Addr:              addrRESR,
 		Handler:           mux,
@@ -69,6 +71,7 @@ func NewServer(ctx context.Context, addrgRPS, addrRESR string, userApp *user.Use
 	return &Server{Srv: srv, listen: listen, SrvREST: &srvREST}, nil
 }
 
+// Start запускает сервер gRPC.
 func (s *Server) Start(ctx context.Context) {
 
 	slog.Info("gRPS server started:" + s.listen.Addr().String())
@@ -79,11 +82,13 @@ func (s *Server) Start(ctx context.Context) {
 	}
 }
 
+// Stop останавливает сервер gRPC.
 func (s *Server) Stop() {
 	s.Srv.GracefulStop()
 	slog.Info("Server gRPS is graceful shutdown...")
 }
 
+// StartRest запускает сервер REST API.
 func (s *Server) StartRest(ctx context.Context) {
 
 	slog.Info("RESR server started:" + s.SrvREST.Addr)
@@ -94,6 +99,7 @@ func (s *Server) StartRest(ctx context.Context) {
 	}
 }
 
+// StopREST останавливает сервер REST API.
 func (s *Server) StopREST(ctx context.Context) {
 
 	timeoutCtx, cancel := context.WithTimeout(ctx, time.Duration(time.Second*2))

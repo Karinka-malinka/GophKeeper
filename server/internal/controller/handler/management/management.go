@@ -1,3 +1,4 @@
+// Package management предоставляет реализацию методов для работы различными типами приватных данных
 package management
 
 import (
@@ -5,6 +6,7 @@ import (
 	"github.com/GophKeeper/server/internal/app/logindata"
 )
 
+// ManagementServer представляет обработчик для управления приватными данными.
 type ManagementServer struct {
 	pb.UnimplementedManagementServiceServer
 	LoginDataApp *logindata.LoginDatas

@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// User представляет структуру пользователя.
 type User struct {
 	UUID     uuid.UUID
 	Username string
@@ -15,16 +16,19 @@ type User struct {
 	Token    string
 }
 
+// IUserStore определяет интерфейс хранилища пользователей.
 type IUserStore interface {
 	Create(ctx context.Context, user User) error
 	Get(ctx context.Context, login string) (*User, error)
 }
 
+// Users представляет структуру для работы с пользователями.
 type Users struct {
 	userStore IUserStore
 	Cfg       *config.ConfigToken
 }
 
+// NewUser создает новый экземпляр Users.
 func NewUser(userStore IUserStore, cfg *config.ConfigToken) *Users {
 	return &Users{
 		userStore: userStore,
@@ -32,6 +36,7 @@ func NewUser(userStore IUserStore, cfg *config.ConfigToken) *Users {
 	}
 }
 
+// Register регистрирует нового пользователя.
 func (ua *Users) Register(ctx context.Context, user User) (*User, error) {
 
 	user.UUID = uuid.New()
@@ -50,6 +55,7 @@ func (ua *Users) Register(ctx context.Context, user User) (*User, error) {
 	return &user, nil
 }
 
+// Login выполняет процесс аутентификации пользователя.
 func (ua *Users) Login(ctx context.Context, user User) (*User, error) {
 
 	userInDB, err := ua.userStore.Get(ctx, user.Username)

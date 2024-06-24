@@ -1,3 +1,4 @@
+// Package user предоставляет реализацию методов для работы с пользователями
 package user
 
 import (
@@ -11,6 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// UsersServer представляет обработчик для работы с пользователями.
 type UsersServer struct {
 	pb.UnimplementedUserServiceServer
 	UserApp *user.Users
@@ -21,6 +23,11 @@ func NewUserHandler(userapp *user.Users) *UsersServer {
 	return &UsersServer{UserApp: userapp}
 }
 
+// Register регистрирует нового пользователя и возвращает ответ с токеном и идентификатором.
+// Возможные коды ошибок:
+//   - codes.AlreadyExists: Если пользователь с таким именем уже существует.
+//   - codes.Internal: В случае внутренней ошибки сервера.
+//   - codes.Aborted: Если операция была прервана контекстом.
 func (u *UsersServer) Register(ctx context.Context, in *pb.UserRequest) (*pb.UserResponse, error) {
 
 	ca := make(chan *user.User)
@@ -52,6 +59,11 @@ func (u *UsersServer) Register(ctx context.Context, in *pb.UserRequest) (*pb.Use
 	}
 }
 
+// Login выполняет процесс аутентификации пользователя и возвращает ответ с токеном и идентификатором.
+// Возможные коды ошибок:
+//   - codes.Unauthenticated: Если предоставлены неверные учетные данные.
+//   - codes.Internal: В случае внутренней ошибки сервера.
+//   - codes.Aborted: Если операция была прервана контекстом.
 func (u *UsersServer) Login(ctx context.Context, in *pb.UserRequest) (*pb.UserResponse, error) {
 
 	ca := make(chan *user.User)
