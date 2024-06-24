@@ -45,6 +45,11 @@ func (m *MockManagementServiceClient) EditLoginData(ctx context.Context, in *pb.
 	return args.Get(0).(*empty.Empty), args.Error(1)
 }
 
+func (m *MockManagementServiceClient) GetFile(ctx context.Context, in *pb.File, opts ...grpc.CallOption) (*pb.File, error) {
+	args := m.Called(ctx, in)
+	return args.Get(0).(*pb.File), args.Error(1)
+}
+
 func (m *MockManagementServiceClient) DeleteLoginData(ctx context.Context, in *pb.LoginData, opts ...grpc.CallOption) (*empty.Empty, error) {
 	args := m.Called(ctx, in)
 	return args.Get(0).(*empty.Empty), args.Error(1)

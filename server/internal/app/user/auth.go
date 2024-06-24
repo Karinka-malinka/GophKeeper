@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -52,7 +53,7 @@ func (ua *Users) getTokensWithClaims(user User, tokenExpiresAt uint) (token *jwt
 	return token
 }
 
-func (ua *Users) GetToken(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func (ua *Users) TokenAuthMiddlewareGRPS(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 
 	if info.FullMethod != "/gophkeeper.UserService/Login" && info.FullMethod != "/gophkeeper.UserService/Register" {
 
@@ -73,21 +74,12 @@ func (ua *Users) GetToken(ctx context.Context, req interface{}, info *grpc.Unary
 
 		if ua.Cfg.SecretKeyForToken != "" {
 
-			valid, userClaims, err := parseToken(token, ua.Cfg.SecretKeyForToken)
-
+			userID, err := extractUserIDFromToken(token, ua.Cfg.SecretKeyForToken)
 			if err != nil {
-				return nil, err
+				return nil, status.Error(codes.Unauthenticated, "missing token")
 			}
 
-			if !valid {
-				return nil, status.Errorf(codes.Unauthenticated, "Действие токена доступа истекло. Выполните команду LOGIN")
-			}
-
-			if userClaims.UserID == "" {
-				return nil, status.Errorf(codes.Unauthenticated, "no userID")
-			}
-
-			ctx = context.WithValue(ctx, "userID", userClaims.UserID)
+			ctx = context.WithValue(ctx, "userID", userID)
 
 			return handler(ctx, req)
 		}
@@ -96,7 +88,58 @@ func (ua *Users) GetToken(ctx context.Context, req interface{}, info *grpc.Unary
 	}
 
 	return handler(ctx, req)
+}
 
+func (ua *Users) TokenAuthMiddlewareREST(ctx context.Context, req *http.Request) metadata.MD {
+
+	md := metadata.Pairs()
+
+	if req.URL.Path == "/register" || req.URL.Path == "/login" {
+		return md
+	}
+
+	token := req.Header.Get("Authorization")
+	if token == "" {
+		md.Append("error", "Unauthorized")
+		return md
+	}
+
+	if ua.Cfg.SecretKeyForToken != "" {
+
+		userID, err := extractUserIDFromToken(token, ua.Cfg.SecretKeyForToken)
+		if err != nil {
+			md.Append("error", "Unauthorized")
+			return md
+		}
+
+		md.Append("userID", userID)
+	}
+
+	md.Append("error", "Unauthorized")
+	return md
+}
+
+func extractUserIDFromToken(token, secretKeyForToken string) (string, error) {
+
+	if len(token) == 0 {
+		return "", fmt.Errorf("no token")
+	}
+
+	valid, userClaims, err := parseToken(token, secretKeyForToken)
+
+	if err != nil {
+		return "", err
+	}
+
+	if !valid {
+		return "", fmt.Errorf("token protuh")
+	}
+
+	if userClaims.UserID == "" {
+		return "", fmt.Errorf("no userID")
+	}
+
+	return userClaims.UserID, nil
 }
 
 func parseToken(tokenstr, secretKey string) (bool, *JWTCustomClaims, error) {
@@ -125,11 +168,17 @@ func parseToken(tokenstr, secretKey string) (bool, *JWTCustomClaims, error) {
 
 func GetUserID(ctx context.Context) (string, error) {
 
+	md, _ := metadata.FromIncomingContext(ctx)
+
+	if val, ok := md["error"]; ok && val[0] == "Unauthorized" {
+		// Возвращаем статус 401 Unauthorized
+		slog.Error("Unauthorized")
+		return "", fmt.Errorf("Unauthorized")
+	}
+
 	var userID string
 
 	userID, ok := ctx.Value("userID").(string)
-
-	//md, ok := metadata.FromIncomingContext(ctx)
 
 	if !ok {
 		slog.Error("userID not found in context")

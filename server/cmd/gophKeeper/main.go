@@ -51,7 +51,7 @@ func main() {
 	syncHandler := mysync.NewSyncHandler(loginDataApp)
 	managementHandler := management.NewManagementHandler(loginDataApp)
 
-	appServer, err := server.NewServer(cfg.RunAddr, userApp)
+	appServer, err := server.NewServer(ctx, cfg.RunAddrgRPS, cfg.RunAddrREST, userApp)
 	if err != nil {
 		os.Exit(1)
 	}
@@ -61,9 +61,11 @@ func main() {
 	pb.RegisterManagementServiceServer(appServer.Srv, managementHandler)
 
 	go appServer.Start(ctx)
+	go appServer.StartRest(ctx)
 
 	<-ctx.Done()
 	appServer.Stop()
+	appServer.StopREST(ctx)
 	m.Close()
 	db.Close()
 }

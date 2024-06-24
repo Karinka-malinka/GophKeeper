@@ -9,14 +9,19 @@ import (
 
 func parseFlags(cfg *config.ConfigData) {
 
-	flag.StringVar(&cfg.RunAddr, "a", "localhost:8888", "address and port to run server")
+	flag.StringVar(&cfg.RunAddrgRPS, "a", "localhost:8888", "address and port to run server gRPS")
+	flag.StringVar(&cfg.RunAddrREST, "r", "localhost:8080", "address and port to run server RESR")
 	flag.StringVar(&cfg.DatabaseDSN, "d", "", "adress connect database")
 	flag.StringVar(&cfg.PathKeys, "k", "", "path keys for token")
 
 	flag.Parse()
 
-	if envRunAddr := os.Getenv("RUN_ADDRESS"); envRunAddr != "" {
-		cfg.RunAddr = envRunAddr
+	if envRunAddrgRPS := os.Getenv("RUN_ADDRESS_GRPS"); envRunAddrgRPS != "" {
+		cfg.RunAddrgRPS = envRunAddrgRPS
+	}
+
+	if envRunAddrRESR := os.Getenv("RUN_ADDRESS_REST"); envRunAddrRESR != "" {
+		cfg.RunAddrREST = envRunAddrRESR
 	}
 
 	if envDatabaseDSN := os.Getenv("DATABASE_URI"); envDatabaseDSN != "" {

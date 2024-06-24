@@ -2,6 +2,8 @@ package mysync
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	pb "github.com/GophKeeper/server/cmd/proto"
 	"github.com/GophKeeper/server/internal/app/logindata"
@@ -65,7 +67,10 @@ func (s *SyncServer) ListLoginData(ctx context.Context, _ *emptypb.Empty) (*pb.L
 	select {
 	case result := <-ca:
 		return result, nil
-	case <-errc:
+	case err := <-errc:
+		if errors.Is(err, fmt.Errorf("Unauthorized")) {
+			return nil, status.Errorf(codes.Unauthenticated, "")
+		}
 		return nil, status.Errorf(codes.Internal, "")
 	case <-ctx.Done():
 		return nil, status.Errorf(codes.Aborted, "")

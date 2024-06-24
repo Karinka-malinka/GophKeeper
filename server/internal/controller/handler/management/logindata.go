@@ -2,6 +2,8 @@ package management
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	pb "github.com/GophKeeper/server/cmd/proto"
 	"github.com/GophKeeper/server/internal/app/logindata"
@@ -47,7 +49,10 @@ func (m *ManagementServer) AddLoginData(ctx context.Context, in *pb.LoginData) (
 	select {
 	case result := <-ca:
 		return result, nil
-	case <-errc:
+	case err := <-errc:
+		if errors.Is(err, fmt.Errorf("Unauthorized")) {
+			return nil, status.Errorf(codes.Unauthenticated, "")
+		}
 		return nil, status.Errorf(codes.Internal, "")
 	case <-ctx.Done():
 		return nil, status.Errorf(codes.Aborted, "")
@@ -61,6 +66,12 @@ func (m *ManagementServer) EditLoginData(ctx context.Context, in *pb.LoginData) 
 
 	go func() {
 
+		_, err := user.GetUserID(ctx)
+		if err != nil {
+			errc <- err
+			return
+		}
+
 		if err := m.LoginDataApp.Edit(ctx, in.Uid, in.Password); err != nil {
 			errc <- err
 			return
@@ -72,7 +83,10 @@ func (m *ManagementServer) EditLoginData(ctx context.Context, in *pb.LoginData) 
 	select {
 	case <-ca:
 		return &emptypb.Empty{}, nil
-	case <-errc:
+	case err := <-errc:
+		if errors.Is(err, fmt.Errorf("Unauthorized")) {
+			return nil, status.Errorf(codes.Unauthenticated, "")
+		}
 		return nil, status.Errorf(codes.Internal, "")
 	case <-ctx.Done():
 		return nil, status.Errorf(codes.Aborted, "")
@@ -86,6 +100,12 @@ func (m *ManagementServer) DeleteLoginData(ctx context.Context, in *pb.LoginData
 
 	go func() {
 
+		_, err := user.GetUserID(ctx)
+		if err != nil {
+			errc <- err
+			return
+		}
+
 		if err := m.LoginDataApp.Delete(ctx, in.Uid); err != nil {
 			errc <- err
 			return
@@ -97,7 +117,10 @@ func (m *ManagementServer) DeleteLoginData(ctx context.Context, in *pb.LoginData
 	select {
 	case <-ca:
 		return &emptypb.Empty{}, nil
-	case <-errc:
+	case err := <-errc:
+		if errors.Is(err, fmt.Errorf("Unauthorized")) {
+			return nil, status.Errorf(codes.Unauthenticated, "")
+		}
 		return nil, status.Errorf(codes.Internal, "")
 	case <-ctx.Done():
 		return nil, status.Errorf(codes.Aborted, "")

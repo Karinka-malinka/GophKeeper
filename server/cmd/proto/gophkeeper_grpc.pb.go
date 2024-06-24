@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.4.0
 // - protoc             v3.12.4
-// source: cmd/proto/gophkeeper.proto
+// source: gophkeeper.proto
 
 package proto
 
@@ -145,7 +145,7 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "cmd/proto/gophkeeper.proto",
+	Metadata: "gophkeeper.proto",
 }
 
 const (
@@ -350,7 +350,7 @@ var SyncService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "cmd/proto/gophkeeper.proto",
+	Metadata: "gophkeeper.proto",
 }
 
 const (
@@ -359,6 +359,7 @@ const (
 	ManagementService_AddFile_FullMethodName         = "/gophkeeper.ManagementService/AddFile"
 	ManagementService_AddBankCard_FullMethodName     = "/gophkeeper.ManagementService/AddBankCard"
 	ManagementService_EditLoginData_FullMethodName   = "/gophkeeper.ManagementService/EditLoginData"
+	ManagementService_GetFile_FullMethodName         = "/gophkeeper.ManagementService/GetFile"
 	ManagementService_DeleteLoginData_FullMethodName = "/gophkeeper.ManagementService/DeleteLoginData"
 	ManagementService_DeleteText_FullMethodName      = "/gophkeeper.ManagementService/DeleteText"
 	ManagementService_DeleteFile_FullMethodName      = "/gophkeeper.ManagementService/DeleteFile"
@@ -374,6 +375,7 @@ type ManagementServiceClient interface {
 	AddFile(ctx context.Context, in *File, opts ...grpc.CallOption) (*empty.Empty, error)
 	AddBankCard(ctx context.Context, in *BankCard, opts ...grpc.CallOption) (*empty.Empty, error)
 	EditLoginData(ctx context.Context, in *LoginData, opts ...grpc.CallOption) (*empty.Empty, error)
+	GetFile(ctx context.Context, in *File, opts ...grpc.CallOption) (*File, error)
 	DeleteLoginData(ctx context.Context, in *LoginData, opts ...grpc.CallOption) (*empty.Empty, error)
 	DeleteText(ctx context.Context, in *Text, opts ...grpc.CallOption) (*empty.Empty, error)
 	DeleteFile(ctx context.Context, in *File, opts ...grpc.CallOption) (*empty.Empty, error)
@@ -438,6 +440,16 @@ func (c *managementServiceClient) EditLoginData(ctx context.Context, in *LoginDa
 	return out, nil
 }
 
+func (c *managementServiceClient) GetFile(ctx context.Context, in *File, opts ...grpc.CallOption) (*File, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(File)
+	err := c.cc.Invoke(ctx, ManagementService_GetFile_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *managementServiceClient) DeleteLoginData(ctx context.Context, in *LoginData, opts ...grpc.CallOption) (*empty.Empty, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(empty.Empty)
@@ -487,6 +499,7 @@ type ManagementServiceServer interface {
 	AddFile(context.Context, *File) (*empty.Empty, error)
 	AddBankCard(context.Context, *BankCard) (*empty.Empty, error)
 	EditLoginData(context.Context, *LoginData) (*empty.Empty, error)
+	GetFile(context.Context, *File) (*File, error)
 	DeleteLoginData(context.Context, *LoginData) (*empty.Empty, error)
 	DeleteText(context.Context, *Text) (*empty.Empty, error)
 	DeleteFile(context.Context, *File) (*empty.Empty, error)
@@ -512,6 +525,9 @@ func (UnimplementedManagementServiceServer) AddBankCard(context.Context, *BankCa
 }
 func (UnimplementedManagementServiceServer) EditLoginData(context.Context, *LoginData) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EditLoginData not implemented")
+}
+func (UnimplementedManagementServiceServer) GetFile(context.Context, *File) (*File, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFile not implemented")
 }
 func (UnimplementedManagementServiceServer) DeleteLoginData(context.Context, *LoginData) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteLoginData not implemented")
@@ -628,6 +644,24 @@ func _ManagementService_EditLoginData_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ManagementService_GetFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(File)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ManagementServiceServer).GetFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ManagementService_GetFile_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ManagementServiceServer).GetFile(ctx, req.(*File))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _ManagementService_DeleteLoginData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(LoginData)
 	if err := dec(in); err != nil {
@@ -728,6 +762,10 @@ var ManagementService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _ManagementService_EditLoginData_Handler,
 		},
 		{
+			MethodName: "GetFile",
+			Handler:    _ManagementService_GetFile_Handler,
+		},
+		{
 			MethodName: "DeleteLoginData",
 			Handler:    _ManagementService_DeleteLoginData_Handler,
 		},
@@ -745,5 +783,5 @@ var ManagementService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "cmd/proto/gophkeeper.proto",
+	Metadata: "gophkeeper.proto",
 }

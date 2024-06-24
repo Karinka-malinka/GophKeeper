@@ -6,7 +6,8 @@ import (
 )
 
 type ConfigData struct {
-	RunAddr     string
+	RunAddrgRPS string
+	RunAddrREST string
 	DatabaseDSN string
 	PathKeys    string
 }
