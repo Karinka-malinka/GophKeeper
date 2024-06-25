@@ -39,7 +39,7 @@ func (u *UsersServer) Register(ctx context.Context, in *pb.UserRequest) (*pb.Use
 
 		if err != nil {
 			errc <- err
-			return
+			//return
 		}
 
 		ca <- user

@@ -43,7 +43,7 @@ func (d *UserStore) Create(ctx context.Context, user user.User) error {
 	return nil
 }
 
-func (d *UserStore) Get(ctx context.Context, login string) (*user.User, error) {
+func (d *UserStore) GetUser(ctx context.Context, login string) (*user.User, error) {
 	var rows *sql.Rows
 
 	qb := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)

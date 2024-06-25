@@ -19,7 +19,7 @@ type User struct {
 // IUserStore определяет интерфейс хранилища пользователей.
 type IUserStore interface {
 	Create(ctx context.Context, user User) error
-	Get(ctx context.Context, login string) (*User, error)
+	GetUser(ctx context.Context, login string) (*User, error)
 }
 
 // Users представляет структуру для работы с пользователями.
@@ -58,7 +58,7 @@ func (ua *Users) Register(ctx context.Context, user User) (*User, error) {
 // Login выполняет процесс аутентификации пользователя.
 func (ua *Users) Login(ctx context.Context, user User) (*User, error) {
 
-	userInDB, err := ua.userStore.Get(ctx, user.Username)
+	userInDB, err := ua.userStore.GetUser(ctx, user.Username)
 
 	if err != nil {
 		return nil, err
