@@ -86,11 +86,10 @@ func (u *UsersServer) Login(ctx context.Context, in *pb.UserRequest) (*pb.UserRe
 		return &pb.UserResponse{Token: result.Token, Uid: result.UUID.String(), Key: u.UserApp.Cfg.Key}, nil
 	case err := <-errc:
 		if err.Error() == "401" {
-			return nil, status.Errorf(codes.Unauthenticated, "Invalid username or password")
+			return nil, status.Errorf(codes.Unauthenticated, "Invalid password")
 		}
 		return nil, status.Errorf(codes.Internal, "")
 	case <-ctx.Done():
 		return nil, status.Errorf(codes.Aborted, "")
 	}
-
 }

@@ -3,7 +3,6 @@ package management
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	pb "github.com/GophKeeper/api/proto"
 	"github.com/GophKeeper/server/internal/app/logindata"
@@ -55,7 +54,8 @@ func (m *ManagementServer) AddLoginData(ctx context.Context, in *pb.LoginData) (
 	case result := <-ca:
 		return result, nil
 	case err := <-errc:
-		if errors.Is(err, fmt.Errorf("Unauthorized")) {
+		var UnauthorizedError *user.UnauthorizedError
+		if errors.As(err, &UnauthorizedError) {
 			return nil, status.Errorf(codes.Unauthenticated, "")
 		}
 		return nil, status.Errorf(codes.Internal, "")
@@ -94,7 +94,8 @@ func (m *ManagementServer) EditLoginData(ctx context.Context, in *pb.LoginData) 
 	case <-ca:
 		return &emptypb.Empty{}, nil
 	case err := <-errc:
-		if errors.Is(err, fmt.Errorf("Unauthorized")) {
+		var UnauthorizedError *user.UnauthorizedError
+		if errors.As(err, &UnauthorizedError) {
 			return nil, status.Errorf(codes.Unauthenticated, "")
 		}
 		return nil, status.Errorf(codes.Internal, "")
@@ -133,7 +134,8 @@ func (m *ManagementServer) DeleteLoginData(ctx context.Context, in *pb.LoginData
 	case <-ca:
 		return &emptypb.Empty{}, nil
 	case err := <-errc:
-		if errors.Is(err, fmt.Errorf("Unauthorized")) {
+		var UnauthorizedError *user.UnauthorizedError
+		if errors.As(err, &UnauthorizedError) {
 			return nil, status.Errorf(codes.Unauthenticated, "")
 		}
 		return nil, status.Errorf(codes.Internal, "")

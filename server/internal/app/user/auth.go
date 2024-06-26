@@ -176,7 +176,7 @@ func GetUserID(ctx context.Context) (string, error) {
 	if val, ok := md["error"]; ok && val[0] == "Unauthorized" {
 		// Возвращаем статус 401 Unauthorized
 		slog.Error("Unauthorized")
-		return "", fmt.Errorf("Unauthorized")
+		return "", NewUnauthorizedError(fmt.Errorf("Unauthorized"))
 	}
 
 	var userID string
@@ -185,7 +185,7 @@ func GetUserID(ctx context.Context) (string, error) {
 
 	if !ok {
 		slog.Error("userID not found in context")
-		return "", fmt.Errorf("userID not found in context")
+		return "", NewUnauthorizedError(fmt.Errorf("Unauthorized"))
 	}
 
 	return userID, nil
