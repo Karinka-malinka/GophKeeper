@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"testing"
 
-	pb "github.com/GophKeeper/server/cmd/proto"
+	pb "github.com/GophKeeper/api/proto"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

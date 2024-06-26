@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
+	pb "github.com/GophKeeper/api/proto"
 	"github.com/GophKeeper/client/cmd/mycripto"
-	pb "github.com/GophKeeper/server/cmd/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 

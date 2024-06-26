@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	pb "github.com/GophKeeper/server/cmd/proto"
+	pb "github.com/GophKeeper/api/proto"
 	"github.com/GophKeeper/server/internal/app/user"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"

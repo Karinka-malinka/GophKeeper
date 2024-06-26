@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
+	pb "github.com/GophKeeper/api/proto"
 	"github.com/GophKeeper/client/cmd/mycripto"
-	pb "github.com/GophKeeper/server/cmd/proto"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"

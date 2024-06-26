@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	pb "github.com/GophKeeper/server/cmd/proto"
+	pb "github.com/GophKeeper/api/proto"
 	"github.com/GophKeeper/server/internal/app/logindata"
 	"github.com/GophKeeper/server/internal/app/user"
 	"google.golang.org/grpc/codes"

@@ -6,8 +6,8 @@ import (
 	"log"
 	"testing"
 
+	"github.com/GophKeeper/api/proto"
 	"github.com/GophKeeper/server/cmd/config"
-	"github.com/GophKeeper/server/cmd/proto"
 	userApp "github.com/GophKeeper/server/internal/app/user"
 	"github.com/GophKeeper/server/internal/database"
 	"github.com/GophKeeper/server/internal/database/mocks"

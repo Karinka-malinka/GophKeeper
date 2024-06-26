@@ -6,8 +6,8 @@ import (
 	"os"
 	"os/signal"
 
+	pb "github.com/GophKeeper/api/proto"
 	"github.com/GophKeeper/server/cmd/config"
-	pb "github.com/GophKeeper/server/cmd/proto"
 	logindataApp "github.com/GophKeeper/server/internal/app/logindata"
 	userApp "github.com/GophKeeper/server/internal/app/user"
 	"github.com/GophKeeper/server/internal/controller/handler/management"

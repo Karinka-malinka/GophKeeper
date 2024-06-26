@@ -11,7 +11,7 @@ import (
 	"runtime"
 	"strings"
 
-	pb "github.com/GophKeeper/server/cmd/proto"
+	pb "github.com/GophKeeper/api/proto"
 
 	"github.com/GophKeeper/client/cmd/config"
 	"github.com/GophKeeper/client/internal/controller/cli"

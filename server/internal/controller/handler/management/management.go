@@ -2,7 +2,7 @@
 package management
 
 import (
-	pb "github.com/GophKeeper/server/cmd/proto"
+	pb "github.com/GophKeeper/api/proto"
 	"github.com/GophKeeper/server/internal/app/logindata"
 )
 
