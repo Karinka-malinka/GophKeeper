@@ -81,10 +81,16 @@ func main() {
 			if cli.CheckLogin() {
 				cli.AddFile(ctx, cManegment, words)
 			}
+		case "deletefile":
+			if cli.CheckLogin() {
+				cli.DeleteFile(ctx, cManegment, words)
+			}
 		case "getfile":
 			if cli.CheckLogin() {
-				cli.AddFile(ctx, cManegment, words)
+				cli.GetFile(ctx, cManegment, words)
 			}
+		case "listfile":
+			cli.ListFile(ctx, cSync)
 		case "exit":
 			fmt.Println("Программа завершена.")
 			os.Exit(0)

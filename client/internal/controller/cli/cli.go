@@ -63,9 +63,9 @@ func (cli *CLI) Help() {
 
 	fmt.Println("\n__Управление бинарными данными__")
 	fmt.Println("ADDFILE path [meta] - добавление файла")     //реализовано
-	fmt.Println("LISTFILE - получить список бинарных данных") //будет чуть позже - возвращает только id, name и meta
+	fmt.Println("LISTFILE - получить список бинарных данных") //реализовано - возвращает только id, name и meta
 	fmt.Println("GETFILE id - получить бинарныe данныe")      //реализовано - получает бинарные данные и сохраняет на диск
-	fmt.Println("DELETEFILE id- удалить бинарные данные")     //будет чуть позже
+	fmt.Println("DELETEFILE id- удалить бинарные данные")     //реализовано
 
 	fmt.Println("\n__Управление данными банковских карт__")
 	fmt.Println("ADDBANKCARD number term ccv [meta] - добавление данных о бансковское карте") //будет чуть позже
