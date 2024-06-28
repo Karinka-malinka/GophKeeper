@@ -11,31 +11,32 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func NewDB(ps string) (*sql.DB, error) {
+func NewDB(ps string) (*sql.DB, *migrate.Migrate, error) {
 
 	db, err := sql.Open("pgx", ps)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	driver, err := postgres.WithInstance(db, &postgres.Config{})
 	if err != nil {
 		slog.Error("Error when creating the driver:" + err.Error())
-		return nil, err
+		return nil, nil, err
 	}
 
 	m, err := migrate.NewWithDatabaseInstance("file://../migrations", "postgres", driver)
 	if err != nil {
 		slog.Error("Error initializing migrations:" + err.Error())
-		return nil, err
+		return nil, nil, err
 	}
-
-	defer m.Close()
 
 	err = m.Up()
 	if errors.Is(err, migrate.ErrNoChange) {
-		slog.Debug("Error during migration:" + err.Error())
+		slog.Debug("No changes during migration")
+	} else if err != nil {
+		slog.Error("Error during migration: " + err.Error())
+		return nil, nil, err
 	}
 
-	return db, nil
+	return db, m, nil
 }

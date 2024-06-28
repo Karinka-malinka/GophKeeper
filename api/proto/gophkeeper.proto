@@ -1,0 +1,165 @@
+syntax = "proto3";
+
+package gophkeeper;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+
+option go_package = "api/proto";
+
+message UserRequest {
+  string login = 1;
+  string password = 2;
+}
+
+message UserResponse {
+  string token = 1;
+  string uid = 2;
+  string key = 3;
+}
+
+message LoginData {
+  string uid = 1; //обязательное для Edit и Delete
+  bytes login = 2;
+  bytes password = 3;
+  bytes meta = 4;
+  google.protobuf.Timestamp created = 5;
+}
+
+message Text {
+  string uid = 1; //обязательное для Delete
+  bytes text = 2;
+  bytes meta = 3;
+  google.protobuf.Timestamp created = 4;
+}
+
+message File {
+  string uid = 1; //обязательное для Get и Delete
+  bytes file = 2;
+  bytes meta = 3;
+  google.protobuf.Timestamp created = 4;
+  bytes name = 5;
+}
+
+message BankCard {
+  bytes number = 1; //обязательное для Delete
+  bytes term = 2;
+  bytes ccv = 3;
+  bytes meta = 4;
+  google.protobuf.Timestamp created = 5;
+}
+
+message LoginDataResponse {
+  repeated LoginData login_data = 1;
+}
+
+message TextResponse {
+  repeated Text text = 1;
+}
+
+message FileResponse {
+  repeated File file = 1;
+}
+
+message BankCardResponse {
+  repeated BankCard bank_card = 1;
+}
+
+service UserService {
+  rpc Register(UserRequest) returns (UserResponse) {
+		option (google.api.http) = {
+			post: "/register"
+			body: "*"
+		};
+  } //регистрация нового пользователя
+  rpc Login(UserRequest) returns (UserResponse) {
+    option (google.api.http) = {
+			post: "/login"
+			body: "*"
+		};
+  } //аутентификация существующего пользователя
+}
+
+service SyncService{
+  rpc ListLoginData(google.protobuf.Empty) returns (LoginDataResponse) {
+    option (google.api.http) = {
+			get: "/apiv1/listlogindata"
+		};
+  } //получить список всех пар логин/пароль
+  rpc ListText(google.protobuf.Empty) returns (TextResponse) {
+    option (google.api.http) = {
+			get: "/apiv1/listtext"
+		};
+  } //получить список текстовых данных
+  rpc ListFile(google.protobuf.Empty) returns (FileResponse) {
+    option (google.api.http) = {
+			get: "/apiv1/listlfile"
+		};
+  } //получить список бинарных данных
+  rpc ListBankCard(google.protobuf.Empty) returns (BankCardResponse){
+    option (google.api.http) = {
+			get: "/apiv1/listlbankcard"
+		};
+  } //получить список банковких карт
+}
+
+service ManagementService{
+  rpc AddLoginData(LoginData) returns (LoginData){ //добавить новую пару логин/пароль
+    option (google.api.http) = {
+			post: "/apiv1/addlogindata"
+			body: "*"
+		};
+  } 
+  rpc AddText(Text) returns (Text){ //добавить текстовую информацию
+    option (google.api.http) = {
+			post: "/apiv1/addtext"
+			body: "*"
+		};
+  } 
+  rpc AddFile(File) returns (File){ // добавить бинарные данные
+    option (google.api.http) = {
+			post: "/apiv1/addfile"
+			body: "*"
+		};
+  } 
+  rpc AddBankCard(BankCard) returns (BankCard){ //добавить данные о бансковской карте
+    option (google.api.http) = {
+			post: "/apiv1/addbankcard"
+			body: "*"
+		}; 
+  } 
+  rpc EditLoginData(LoginData) returns (google.protobuf.Empty){ //отредактировать пару логин/пароль
+    option (google.api.http) = {
+			post: "/apiv1/editlogindata"
+			body: "*"
+		};
+  } 
+  
+  rpc GetFile(File) returns (File){ //получить бинарные данные
+    option (google.api.http) = {
+			get: "/apiv1/getfile/{uid}"
+		};
+  } 
+
+  rpc DeleteLoginData(LoginData) returns (google.protobuf.Empty){  //удалить пару логин/пароль
+    option (google.api.http) = {
+			delete: "/apiv1/deletelogindata/{uid}"
+		};
+  }
+  rpc DeleteText(Text) returns (google.protobuf.Empty){ //удалить текстовую информацию
+    option (google.api.http) = {
+			delete: "/apiv1/deletetext/{uid}"
+		};
+  } 
+  rpc DeleteFile(File) returns (google.protobuf.Empty){ //удалить бинарные данные
+    option (google.api.http) = {
+			delete: "/apiv1/deletefile/{uid}"
+		};
+  } 
+  rpc DeleteBankCard(BankCard) returns (google.protobuf.Empty){ //удалить данные о бансковской карте
+    option (google.api.http) = {
+			delete: "/apiv1/deletebankcard/{number}"
+		};
+  } 
+}

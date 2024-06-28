@@ -15,7 +15,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-var _ user.UserStore = &UserStore{}
+var _ user.IUserStore = &UserStore{}
 
 type UserStore struct {
 	db *sql.DB
@@ -43,14 +43,14 @@ func (d *UserStore) Create(ctx context.Context, user user.User) error {
 	return nil
 }
 
-func (d *UserStore) Get(ctx context.Context, condition map[string]string) (*user.User, error) {
+func (d *UserStore) GetUser(ctx context.Context, login string) (*user.User, error) {
 	var rows *sql.Rows
 
 	qb := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
 	query, args, err := qb.Select("uuid, login, hash_pass").
 		From("users").
-		Where(condition).
+		Where(squirrel.Eq{"login": login}).
 		ToSql()
 
 	if err != nil {

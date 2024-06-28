@@ -2,92 +2,78 @@ package user
 
 import (
 	"context"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
-	"fmt"
-	"log/slog"
 
+	"github.com/GophKeeper/server/cmd/config"
 	"github.com/google/uuid"
 )
 
+// User представляет структуру пользователя.
 type User struct {
 	UUID     uuid.UUID
 	Username string
 	Password string
+	Token    string
 }
 
-type UserStore interface {
+// IUserStore определяет интерфейс хранилища пользователей.
+type IUserStore interface {
 	Create(ctx context.Context, user User) error
-	Get(ctx context.Context, condition map[string]string) (*User, error)
+	GetUser(ctx context.Context, login string) (*User, error)
 }
 
+// Users представляет структуру для работы с пользователями.
 type Users struct {
-	userStore UserStore
+	userStore IUserStore
+	Cfg       *config.ConfigToken
 }
 
-func NewUser(userStore UserStore) *Users {
+// NewUser создает новый экземпляр Users.
+func NewUser(userStore IUserStore, cfg *config.ConfigToken) *Users {
 	return &Users{
 		userStore: userStore,
+		Cfg:       cfg,
 	}
 }
 
-func (ua *Users) Register(ctx context.Context, user User) (string, error) {
+// Register регистрирует нового пользователя.
+func (ua *Users) Register(ctx context.Context, user User) (*User, error) {
 
 	user.UUID = uuid.New()
-	user.Password = hex.EncodeToString(ua.writeHash(user.Username, user.Password))
 
 	if err := ua.userStore.Create(ctx, user); err != nil {
-		return "", err
+		return nil, err
 	}
 
-	accessToken, err := ua.newToken(user, 60, user.Username)
+	accessToken, err := ua.newToken(user, ua.Cfg.TokenExpiresAt, ua.Cfg.SecretKeyForToken)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return accessToken, nil
+	user.Token = accessToken
+
+	return &user, nil
 }
 
-func (ua *Users) Login(ctx context.Context, user User) (string, error) {
+// Login выполняет процесс аутентификации пользователя.
+func (ua *Users) Login(ctx context.Context, user User) (*User, error) {
 
-	userInDB, err := ua.userStore.Get(ctx, map[string]string{"login": user.Username})
-
-	if err != nil {
-		return "", err
-	}
-
-	if !ua.checkHash(user, userInDB.Password) {
-		return "", errors.New("401")
-	}
-
-	accessToken, err := ua.newToken(*userInDB, 60, user.Username)
-	if err != nil {
-		return "", err
-	}
-
-	return accessToken, nil
-}
-
-func (ua *Users) checkHash(user User, userHash string) bool {
-
-	check1 := ua.writeHash(user.Username, user.Password)
-	check2, err := hex.DecodeString(userHash)
+	userInDB, err := ua.userStore.GetUser(ctx, user.Username)
 
 	if err != nil {
-		slog.Error("Error in decode user hash. error: " + err.Error())
-		return false
+		return nil, err
 	}
 
-	return hmac.Equal(check2, check1)
+	if user.Password != userInDB.Password {
+		return nil, errors.New("401")
+	}
 
-}
+	accessToken, err := ua.newToken(*userInDB, ua.Cfg.TokenExpiresAt, ua.Cfg.SecretKeyForToken)
+	if err != nil {
+		return nil, err
+	}
 
-func (ua *Users) writeHash(username string, password string) []byte {
+	userInDB.Token = accessToken
 
-	hash := hmac.New(sha256.New, []byte("ua.Cfg.SecretKeyForHashingPassword"))
-	hash.Write([]byte(fmt.Sprintf("%s:%s:%s", username, password, "ua.Cfg.SecretKeyForHashingPassword")))
-
-	return hash.Sum(nil)
+	return userInDB, nil
 }
