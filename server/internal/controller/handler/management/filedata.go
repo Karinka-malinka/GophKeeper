@@ -41,7 +41,6 @@ func (m *ManagementServer) AddFile(ctx context.Context, in *pb.File) (*pb.File, 
 
 		resp := &pb.File{
 			Uid:     nData.UUID.String(),
-			File:    nData.File,
 			Name:    nData.Name,
 			Meta:    nData.Meta,
 			Created: timestamppb.New(nData.Created),

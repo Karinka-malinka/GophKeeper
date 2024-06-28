@@ -77,6 +77,14 @@ func main() {
 			}
 		case "listlogindata":
 			cli.ListLoginData(ctx, cSync)
+		case "addfile":
+			if cli.CheckLogin() {
+				cli.AddFile(ctx, cManegment, words)
+			}
+		case "getfile":
+			if cli.CheckLogin() {
+				cli.AddFile(ctx, cManegment, words)
+			}
 		case "exit":
 			fmt.Println("Программа завершена.")
 			os.Exit(0)

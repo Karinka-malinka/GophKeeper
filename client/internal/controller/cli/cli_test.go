@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -458,6 +459,130 @@ func TestCLI_UpdateLoginData(t *testing.T) {
 
 		if buf.String() != expected {
 			t.Errorf("Expected output: %s, got: %s", expected, buf.String())
+		}
+	})
+}
+
+func TestCLI_AddFile(t *testing.T) {
+
+	ctx := context.Background()
+
+	mockClient := getMosk(t).ManagementServiceClient
+
+	cli := NewCLI()
+	cli.UserID = "2d618858-27bb-474c-9150-8a03126feff7"
+	cli.Key = "a2F4c1e8D9d3A7fe"
+
+	words := []string{"addfile", "./file_test.txt", "meta meta meta"}
+
+	// Открытие файла для чтения
+	file, err := os.Open(words[1])
+	if err != nil {
+		fmt.Println("Ошибка при открытии файла:", err)
+		return
+	}
+	defer file.Close()
+
+	// Чтение данных файла в виде байтов
+	var data []byte
+	_, err = io.ReadFull(file, data)
+	if err != nil {
+		fmt.Println("Ошибка при чтении файла:", err)
+		return
+	}
+
+	uid := uuid.New().String()
+	request := Request{}
+	request.fileData = &proto.File{
+		Uid:  uid,
+		Name: []byte(words[1]),
+		File: data,
+		Meta: []byte(words[2]),
+	}
+
+	t.Run("Input", func(t *testing.T) {
+
+		currentLen := len(cli.MyData.ListFile)
+
+		//mockClient := &MockManagementServiceClient{}
+		//mockClient.On("AddLoginData", ctx, mock.Anything).Return(request.loginData, nil)
+
+		mockClient.EXPECT().AddFile(ctx, gomock.Any()).Return(request.fileData, nil).Times(1)
+
+		// Макетирование ввода с клавиатуры
+		mockInput := "./file_test.txt\n"
+		r, w, _ := os.Pipe()
+		oldStdin := os.Stdin
+		os.Stdin = r
+		defer func() {
+			os.Stdin = oldStdin
+		}()
+
+		w.WriteString(mockInput)
+		w.Close()
+
+		words := []string{"add"}
+
+		cli.AddFile(ctx, mockClient, words)
+
+		// Проверка, что login и password были добавлены в words
+		if len(cli.MyData.ListFile) != currentLen+1 {
+			t.Error("Incorrect add")
+		}
+	})
+
+	t.Run("Success", func(t *testing.T) {
+
+		mockClient.EXPECT().AddFile(ctx, gomock.Any()).Return(request.fileData, nil).Times(1)
+
+		cli.AddFile(ctx, mockClient, words)
+
+		// Check if the login data was added to MyData
+		if _, ok := cli.MyData.ListFile[uid]; !ok {
+			t.Error("Login data was not added to MyData")
+		}
+	})
+}
+
+func TestCLI_GetFile(t *testing.T) {
+
+	ctx := context.Background()
+	uid := uuid.New().String()
+	mockClient := getMosk(t).ManagementServiceClient
+
+	cli := NewCLI()
+	cli.UserID = "2d618858-27bb-474c-9150-8a03126feff7"
+	cli.Key = "a2F4c1e8D9d3A7fe"
+
+	resp := Request{}
+	resp.fileData = &proto.File{
+		Uid:  uid,
+		Name: mycripto.Encrypt([]byte("newfile.txt"), []byte(cli.Key)),
+		File: mycripto.Encrypt([]byte{65, 66, 67, 68, 69}, []byte(cli.Key)), // Пример байтов данных файла
+	}
+
+	t.Run("Success", func(t *testing.T) {
+
+		mockClient.EXPECT().GetFile(ctx, gomock.Any()).Return(resp.fileData, nil).Times(1)
+
+		// Макетирование ввода с клавиатуры
+		mockInput := uid + "\n"
+		r, w, _ := os.Pipe()
+		oldStdin := os.Stdin
+		os.Stdin = r
+		defer func() {
+			os.Stdin = oldStdin
+		}()
+
+		w.WriteString(mockInput)
+		w.Close()
+
+		words := []string{"get"}
+
+		cli.GetFile(ctx, mockClient, words)
+
+		if _, ok := cli.MyData.ListFile[uid]; !ok {
+			t.Error("Not file")
 		}
 	})
 }
