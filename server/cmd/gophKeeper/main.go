@@ -8,14 +8,20 @@ import (
 
 	pb "github.com/GophKeeper/api/proto"
 	"github.com/GophKeeper/server/cmd/config"
+	bankcardApp "github.com/GophKeeper/server/internal/app/bankcard"
+	filedataApp "github.com/GophKeeper/server/internal/app/filedata"
 	logindataApp "github.com/GophKeeper/server/internal/app/logindata"
+	textdataApp "github.com/GophKeeper/server/internal/app/textdata"
 	userApp "github.com/GophKeeper/server/internal/app/user"
 	"github.com/GophKeeper/server/internal/controller/handler/management"
 	"github.com/GophKeeper/server/internal/controller/handler/mysync"
 	userHandler "github.com/GophKeeper/server/internal/controller/handler/user"
 	"github.com/GophKeeper/server/internal/controller/server"
 	"github.com/GophKeeper/server/internal/database"
+	bankcardStore "github.com/GophKeeper/server/internal/database/bankcard"
+	filedataStore "github.com/GophKeeper/server/internal/database/filedata"
 	logindataStore "github.com/GophKeeper/server/internal/database/logindata"
+	textdataStore "github.com/GophKeeper/server/internal/database/textdata"
 	userStore "github.com/GophKeeper/server/internal/database/user"
 	"github.com/GophKeeper/server/internal/logger"
 )
@@ -44,11 +50,19 @@ func main() {
 	userApp := userApp.NewUser(userStore, cfgToken)
 	userHandler := userHandler.NewUserHandler(userApp)
 
-	//TODO: добавить app на все типы хранимых данных
 	loginDataStore := logindataStore.NewLoginDataStore(db)
 	loginDataApp := logindataApp.NewLoginData(loginDataStore)
 
-	syncHandler := mysync.NewSyncHandler(loginDataApp)
+	textDataStore := textdataStore.NewTextDataStore(db)
+	textDataApp := textdataApp.NewTextData(textDataStore)
+
+	fileDataStore := filedataStore.NewFileDataStore(db)
+	fileDataApp := filedataApp.NewFiletData(fileDataStore)
+
+	bankCardStore := bankcardStore.NewBankCardDataStore(db)
+	bankCardApp := bankcardApp.NewBankCardData(bankCardStore)
+
+	syncHandler := mysync.NewSyncHandler(loginDataApp, textDataApp, fileDataApp, bankCardApp)
 	managementHandler := management.NewManagementHandler(loginDataApp)
 
 	appServer, err := server.NewServer(ctx, cfg.RunAddrgRPS, cfg.RunAddrREST, userApp)

@@ -371,9 +371,9 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ManagementServiceClient interface {
 	AddLoginData(ctx context.Context, in *LoginData, opts ...grpc.CallOption) (*LoginData, error)
-	AddText(ctx context.Context, in *Text, opts ...grpc.CallOption) (*empty.Empty, error)
-	AddFile(ctx context.Context, in *File, opts ...grpc.CallOption) (*empty.Empty, error)
-	AddBankCard(ctx context.Context, in *BankCard, opts ...grpc.CallOption) (*empty.Empty, error)
+	AddText(ctx context.Context, in *Text, opts ...grpc.CallOption) (*Text, error)
+	AddFile(ctx context.Context, in *File, opts ...grpc.CallOption) (*File, error)
+	AddBankCard(ctx context.Context, in *BankCard, opts ...grpc.CallOption) (*BankCard, error)
 	EditLoginData(ctx context.Context, in *LoginData, opts ...grpc.CallOption) (*empty.Empty, error)
 	GetFile(ctx context.Context, in *File, opts ...grpc.CallOption) (*File, error)
 	DeleteLoginData(ctx context.Context, in *LoginData, opts ...grpc.CallOption) (*empty.Empty, error)
@@ -400,9 +400,9 @@ func (c *managementServiceClient) AddLoginData(ctx context.Context, in *LoginDat
 	return out, nil
 }
 
-func (c *managementServiceClient) AddText(ctx context.Context, in *Text, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *managementServiceClient) AddText(ctx context.Context, in *Text, opts ...grpc.CallOption) (*Text, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(empty.Empty)
+	out := new(Text)
 	err := c.cc.Invoke(ctx, ManagementService_AddText_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -410,9 +410,9 @@ func (c *managementServiceClient) AddText(ctx context.Context, in *Text, opts ..
 	return out, nil
 }
 
-func (c *managementServiceClient) AddFile(ctx context.Context, in *File, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *managementServiceClient) AddFile(ctx context.Context, in *File, opts ...grpc.CallOption) (*File, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(empty.Empty)
+	out := new(File)
 	err := c.cc.Invoke(ctx, ManagementService_AddFile_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -420,9 +420,9 @@ func (c *managementServiceClient) AddFile(ctx context.Context, in *File, opts ..
 	return out, nil
 }
 
-func (c *managementServiceClient) AddBankCard(ctx context.Context, in *BankCard, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *managementServiceClient) AddBankCard(ctx context.Context, in *BankCard, opts ...grpc.CallOption) (*BankCard, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(empty.Empty)
+	out := new(BankCard)
 	err := c.cc.Invoke(ctx, ManagementService_AddBankCard_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -495,9 +495,9 @@ func (c *managementServiceClient) DeleteBankCard(ctx context.Context, in *BankCa
 // for forward compatibility
 type ManagementServiceServer interface {
 	AddLoginData(context.Context, *LoginData) (*LoginData, error)
-	AddText(context.Context, *Text) (*empty.Empty, error)
-	AddFile(context.Context, *File) (*empty.Empty, error)
-	AddBankCard(context.Context, *BankCard) (*empty.Empty, error)
+	AddText(context.Context, *Text) (*Text, error)
+	AddFile(context.Context, *File) (*File, error)
+	AddBankCard(context.Context, *BankCard) (*BankCard, error)
 	EditLoginData(context.Context, *LoginData) (*empty.Empty, error)
 	GetFile(context.Context, *File) (*File, error)
 	DeleteLoginData(context.Context, *LoginData) (*empty.Empty, error)
@@ -514,13 +514,13 @@ type UnimplementedManagementServiceServer struct {
 func (UnimplementedManagementServiceServer) AddLoginData(context.Context, *LoginData) (*LoginData, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddLoginData not implemented")
 }
-func (UnimplementedManagementServiceServer) AddText(context.Context, *Text) (*empty.Empty, error) {
+func (UnimplementedManagementServiceServer) AddText(context.Context, *Text) (*Text, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddText not implemented")
 }
-func (UnimplementedManagementServiceServer) AddFile(context.Context, *File) (*empty.Empty, error) {
+func (UnimplementedManagementServiceServer) AddFile(context.Context, *File) (*File, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddFile not implemented")
 }
-func (UnimplementedManagementServiceServer) AddBankCard(context.Context, *BankCard) (*empty.Empty, error) {
+func (UnimplementedManagementServiceServer) AddBankCard(context.Context, *BankCard) (*BankCard, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddBankCard not implemented")
 }
 func (UnimplementedManagementServiceServer) EditLoginData(context.Context, *LoginData) (*empty.Empty, error) {

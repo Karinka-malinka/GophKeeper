@@ -1,3 +1,4 @@
+// Package textdata представляет собой пакет для работы с парами логин/пароль.
 package logindata
 
 import (
@@ -11,14 +12,17 @@ import (
 
 var _ logindata.ILoginDataStore = &LoginDataStore{}
 
+// LoginDataStore представляет хранилище пар логин/пароль.
 type LoginDataStore struct {
 	db *sql.DB
 }
 
+// NewLoginDataStore создает новый экземпляр хранилища пар логин/пароль.
 func NewLoginDataStore(db *sql.DB) *LoginDataStore {
 	return &LoginDataStore{db: db}
 }
 
+// Create создает новую запись пары логин/пароль в базе данных.
 func (d *LoginDataStore) Create(ctx context.Context, loginData logindata.LoginData) error {
 
 	qb := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
@@ -43,6 +47,7 @@ func (d *LoginDataStore) Create(ctx context.Context, loginData logindata.LoginDa
 	return nil
 }
 
+// Update изменяет запись пары логин/пароль в базе данных по идентификатору.
 func (d *LoginDataStore) Update(ctx context.Context, loginDataUID string, newpassword []byte) error {
 
 	tx, err := d.db.Begin()
@@ -61,6 +66,7 @@ func (d *LoginDataStore) Update(ctx context.Context, loginDataUID string, newpas
 	return tx.Commit()
 }
 
+// Delete удаляет запись пары логин/пароль из базы данных по идентификатору.
 func (d *LoginDataStore) Delete(ctx context.Context, loginDataUID string) error {
 
 	tx, err := d.db.Begin()
@@ -79,6 +85,7 @@ func (d *LoginDataStore) Delete(ctx context.Context, loginDataUID string) error 
 	return tx.Commit()
 }
 
+// GetList возвращает список пар логин/пароль для указанного пользователя.
 func (d *LoginDataStore) GetList(ctx context.Context, userID string) ([]logindata.LoginData, error) {
 
 	var rows *sql.Rows

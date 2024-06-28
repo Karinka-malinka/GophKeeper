@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/GophKeeper/server/internal/app/bankcard"
+	"github.com/GophKeeper/server/internal/app/filedata"
 	logindataApp "github.com/GophKeeper/server/internal/app/logindata"
+	"github.com/GophKeeper/server/internal/app/textdata"
 	"github.com/GophKeeper/server/internal/database/mocks"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -27,7 +30,16 @@ func TestSyncServer_ListLoginData(t *testing.T) {
 	mockLogindataStore := mocks.NewMockILoginDataStore(ctrl)
 	loginDataApp := logindataApp.NewLoginData(mockLogindataStore)
 
-	syncHandler := NewSyncHandler(loginDataApp)
+	mockTextdataStore := mocks.NewMockITextDataStore(ctrl)
+	textDataApp := textdata.NewTextData(mockTextdataStore)
+
+	mockFileDataStore := mocks.NewMockIFileDataStore(ctrl)
+	fileDataApp := filedata.NewFiletData(mockFileDataStore)
+
+	mockBankCardDataStore := mocks.NewMockIBankCardDataStore(ctrl)
+	BankCardApp := bankcard.NewBankCardData(mockBankCardDataStore)
+
+	syncHandler := NewSyncHandler(loginDataApp, textDataApp, fileDataApp, BankCardApp)
 
 	t.Run("Unauthenticated", func(t *testing.T) {
 

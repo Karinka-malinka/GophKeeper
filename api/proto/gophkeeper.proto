@@ -111,19 +111,19 @@ service ManagementService{
 			body: "*"
 		};
   } 
-  rpc AddText(Text) returns (google.protobuf.Empty){ //добавить текстовую информацию
+  rpc AddText(Text) returns (Text){ //добавить текстовую информацию
     option (google.api.http) = {
 			post: "/apiv1/addtext"
 			body: "*"
 		};
   } 
-  rpc AddFile(File) returns (google.protobuf.Empty){ // добавить бинарные данные
+  rpc AddFile(File) returns (File){ // добавить бинарные данные
     option (google.api.http) = {
 			post: "/apiv1/addfile"
 			body: "*"
 		};
   } 
-  rpc AddBankCard(BankCard) returns (google.protobuf.Empty){ //добавить данные о бансковской карте
+  rpc AddBankCard(BankCard) returns (BankCard){ //добавить данные о бансковской карте
     option (google.api.http) = {
 			post: "/apiv1/addbankcard"
 			body: "*"
