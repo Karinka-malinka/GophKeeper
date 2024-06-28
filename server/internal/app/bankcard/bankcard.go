@@ -18,7 +18,7 @@ type BankCardData struct {
 // IBankCardDataStore определяет интерфейс хранилища данных о банковской карте
 type IBankCardDataStore interface {
 	Create(ctx context.Context, data BankCardData) error
-	Delete(ctx context.Context, dataUID string) error
+	Delete(ctx context.Context, dataUID []byte) error
 	GetList(ctx context.Context, userID string) ([]BankCardData, error)
 }
 
@@ -47,7 +47,7 @@ func (l *BankCardDatas) Add(ctx context.Context, data BankCardData) (*BankCardDa
 }
 
 // Delete удаляет данные о банковской карте
-func (l *BankCardDatas) Delete(ctx context.Context, dataUID string) error {
+func (l *BankCardDatas) Delete(ctx context.Context, dataUID []byte) error {
 
 	if err := l.dataStore.Delete(ctx, dataUID); err != nil {
 		return err

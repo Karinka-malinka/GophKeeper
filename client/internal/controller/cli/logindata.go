@@ -50,7 +50,7 @@ func (cli *CLI) AddLoginData(ctx context.Context, c pb.ManagementServiceClient, 
 		return
 	}
 
-	fmt.Println("SUCCESS. Данные успешно добавлены")
+	fmt.Printf("SUCCESS. Данные успешно добавлены (id %s)\n", newLoginData.Uid)
 
 	//сохранение данных на клиенте, если они успешно сохранены на сервере
 	cli.MyData.ListLoginData[newLoginData.Uid] = newLoginData

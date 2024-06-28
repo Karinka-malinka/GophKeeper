@@ -47,7 +47,7 @@ func (d *DataStore) Create(ctx context.Context, data bankcard.BankCardData) erro
 }
 
 // Delete удаляет запись банковских данных из базы данных по идентификатору.
-func (d *DataStore) Delete(ctx context.Context, dataUID string) error {
+func (d *DataStore) Delete(ctx context.Context, dataUID []byte) error {
 
 	tx, err := d.db.Begin()
 	if err != nil {

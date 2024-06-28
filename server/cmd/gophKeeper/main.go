@@ -63,7 +63,7 @@ func main() {
 	bankCardApp := bankcardApp.NewBankCardData(bankCardStore)
 
 	syncHandler := mysync.NewSyncHandler(loginDataApp, textDataApp, fileDataApp, bankCardApp)
-	managementHandler := management.NewManagementHandler(loginDataApp)
+	managementHandler := management.NewManagementHandler(loginDataApp, textDataApp, fileDataApp, bankCardApp)
 
 	appServer, err := server.NewServer(ctx, cfg.RunAddrgRPS, cfg.RunAddrREST, userApp)
 	if err != nil {
