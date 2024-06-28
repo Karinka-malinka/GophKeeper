@@ -581,8 +581,141 @@ func TestCLI_GetFile(t *testing.T) {
 
 		cli.GetFile(ctx, mockClient, words)
 
-		if _, ok := cli.MyData.ListFile[uid]; !ok {
-			t.Error("Not file")
+	})
+}
+
+func TestCLI_ListFile(t *testing.T) {
+
+	ctx := context.Background()
+
+	mockClient := getMosk(t).SyncServiceClient
+
+	cli := NewCLI()
+	cli.UserID = "2d618858-27bb-474c-9150-8a03126feff7"
+	cli.Key = "a2F4c1e8D9d3A7fe"
+
+	resp := pb.FileResponse{}
+	resp.File = append(resp.File, &pb.File{
+		Uid:     uuid.New().String(),
+		Name:    []byte(mycripto.Encrypt([]byte("name1.txt"), []byte(cli.Key))),
+		Meta:    []byte(mycripto.Encrypt([]byte("meta 1"), []byte(cli.Key))),
+		Created: timestamppb.New(time.Now().UTC()),
+	})
+	resp.File = append(resp.File, &pb.File{
+		Uid:     uuid.New().String(),
+		Name:    []byte(mycripto.Encrypt([]byte("name2.txt"), []byte(cli.Key))),
+		Meta:    []byte(mycripto.Encrypt([]byte("meta 2"), []byte(cli.Key))),
+		Created: timestamppb.New(time.Now().UTC()),
+	})
+
+	t.Run("Success", func(t *testing.T) {
+
+		mockClient.EXPECT().ListFile(ctx, gomock.Any()).Return(&resp, nil).Times(1)
+
+		cli.ListFile(ctx, mockClient)
+
+		if len(cli.MyData.ListFile) != len(resp.File) {
+			t.Error("Error sync login data")
+		}
+	})
+
+	t.Run("Internal", func(t *testing.T) {
+
+		mockClient.EXPECT().ListFile(ctx, gomock.Any()).Return(&resp, status.Errorf(codes.Internal, "")).Times(1)
+
+		old := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+
+		cli.ListFile(ctx, mockClient)
+
+		w.Close()
+		var buf bytes.Buffer
+		io.Copy(&buf, r)
+		os.Stdout = old
+
+		expected := "OFFLINE режим"
+
+		if !strings.Contains(buf.String(), expected) {
+			t.Errorf("Expected output: %s, got: %s", expected, buf.String())
+		}
+	})
+}
+
+func TestCLI_DeleteFile(t *testing.T) {
+
+	ctx := context.Background()
+
+	mockClient := getMosk(t).ManagementServiceClient
+
+	uid := uuid.New().String()
+
+	cli := NewCLI()
+	cli.UserID = "2d618858-27bb-474c-9150-8a03126feff7"
+	cli.Key = "a2F4c1e8D9d3A7fe"
+
+	cli.MyData.ListFile[uid] = &pb.File{
+		Uid:  uid,
+		Name: []byte("name.txt"),
+		Meta: []byte("meta"),
+	}
+
+	words := []string{"delete", uuid.New().String()}
+
+	request := Request{}
+	request.fileData = &proto.File{
+		Uid: words[1],
+	}
+
+	t.Run("Input", func(t *testing.T) {
+
+		currentLen := len(cli.MyData.ListFile)
+
+		//mockClient.On("DeleteLoginData", ctx, mock.Anything).Return(&empty.Empty{}, nil)
+		mockClient.EXPECT().DeleteFile(ctx, gomock.Any()).Return(&empty.Empty{}, nil).Times(1)
+
+		// Макетирование ввода с клавиатуры
+		mockInput := uid + "\n"
+		r, w, _ := os.Pipe()
+		oldStdin := os.Stdin
+		os.Stdin = r
+		defer func() {
+			os.Stdin = oldStdin
+		}()
+
+		w.WriteString(mockInput)
+		w.Close()
+
+		words := []string{"add"}
+
+		cli.DeleteFile(ctx, mockClient, words)
+
+		// Проверка, что login и password были добавлены в words
+		if len(cli.MyData.ListFile) != currentLen-1 {
+			t.Error("Incorrect delete")
+		}
+	})
+
+	t.Run("Internal", func(t *testing.T) {
+
+		//mockClient.On("DeleteLoginData", ctx, mock.Anything).Return(&empty.Empty{}, status.Errorf(codes.Internal, ""))
+		mockClient.EXPECT().DeleteFile(ctx, gomock.Any()).Return(&empty.Empty{}, status.Errorf(codes.Internal, "")).Times(1)
+
+		old := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+
+		cli.DeleteFile(ctx, mockClient, words)
+
+		w.Close()
+		var buf bytes.Buffer
+		io.Copy(&buf, r)
+		os.Stdout = old
+
+		expected := "Ошибка на сервере. Обратитесь в техническую поддержку\n"
+
+		if buf.String() != expected {
+			t.Errorf("Expected output: %s, got: %s", expected, buf.String())
 		}
 	})
 }

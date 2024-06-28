@@ -63,7 +63,7 @@ func (cli *CLI) Help() {
 
 	fmt.Println("\n__Управление бинарными данными__")
 	fmt.Println("ADDFILE path [meta] - добавление файла")     //реализовано
-	fmt.Println("LISTFILE - получить список бинарных данных") //реализовано - возвращает только id, name и meta
+	fmt.Println("LISTFILE - получить список бинарных данных") //будет чуть позже - возвращает только id, name и meta
 	fmt.Println("GETFILE id - получить бинарныe данныe")      //реализовано - получает бинарные данные и сохраняет на диск
 	fmt.Println("DELETEFILE id- удалить бинарные данные")     //будет чуть позже
 
@@ -176,15 +176,42 @@ func (cli *CLI) Login(ctx context.Context, c pb.UserServiceClient, m pb.SyncServ
 	fmt.Println("SUCCESS. Синхронизация данных для пар логин/пароль выполнена")
 
 	//список текстовых данных
-	//TODO: здесь будет код синхронизации приватных текстовых данных
+	respListText, err := m.ListText(ctx, &emptypb.Empty{})
+	if err != nil {
+		fmt.Println(err.Error())
+		fmt.Println("ERROR. Синхронизация данных не выполнена")
+		checkError(err)
+		return ctx
+	}
+	for _, ld := range respListText.Text {
+		cli.MyData.ListText[ld.Uid] = ld
+	}
 	fmt.Println("SUCCESS. Синхронизация приватной текстовой информации выполнена")
 
 	//список файлов
-	//TODO: здесь будет код синхронизации приватных файлов
+	respListFile, err := m.ListFile(ctx, &emptypb.Empty{})
+	if err != nil {
+		fmt.Println(err.Error())
+		fmt.Println("ERROR. Синхронизация данных не выполнена")
+		checkError(err)
+		return ctx
+	}
+	for _, ld := range respListFile.File {
+		cli.MyData.ListFile[ld.Uid] = ld
+	}
 	fmt.Println("SUCCESS. Синхронизация приватных файлов выполнена")
 
 	//список банковских карт
-	//TODO: здесь будет код синхронизации банковских данных
+	respListBankCard, err := m.ListBankCard(ctx, &emptypb.Empty{})
+	if err != nil {
+		fmt.Println(err.Error())
+		fmt.Println("ERROR. Синхронизация данных не выполнена")
+		checkError(err)
+		return ctx
+	}
+	for _, ld := range respListBankCard.BankCard {
+		cli.MyData.ListBankCard[string(ld.Number)] = ld
+	}
 	fmt.Println("SUCCESS. Синхронизация данных о банковских картах выполнена")
 
 	return ctx
