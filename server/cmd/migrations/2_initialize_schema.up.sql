@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS filedata (
 		filedata BYTEA,
 		meta BYTEA,
 		user_id TEXT,
+        namefile TEXT,
 		FOREIGN KEY (user_id) REFERENCES users(uuid)
 	  );
 
